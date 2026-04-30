@@ -15,6 +15,9 @@ import {
   Plus,
   Check,
   Smile,
+  ShieldCheck,
+  Zap,
+  Globe2,
 } from "lucide-react";
 import { AppBottomNav } from "@/components/AppBottomNav.jsx";
 import { MediaViewer } from "@/components/MediaViewer.jsx";
@@ -702,17 +705,71 @@ export default function ChatExperience() {
   if (!authToken || !authUser) {
     return (
       <div
-        className={`min-h-screen bg-[color:var(--app-bg)] flex items-center justify-center p-6 transition-opacity duration-150 md:duration-200 ${
+        className={`min-h-screen bg-[color:var(--app-bg)] relative overflow-hidden flex items-center justify-center p-4 sm:p-6 transition-opacity duration-150 md:duration-200 ${
           contentVisible ? "opacity-100" : "opacity-0"
         }`}
       >
-        <div className="w-full max-w-md surface-card p-8">
-          <h1 className="text-2xl font-semibold text-gray-100 mb-2">Iniciar sesion</h1>
-          <p className="text-sm text-[color:var(--text-soft)] mb-6">
-            Usa tu cuenta de Google para entrar al chat.
-          </p>
-          <div ref={googleButtonRef} className="min-h-[44px]" />
-          {authError ? <p className="mt-4 text-sm text-red-400">{authError}</p> : null}
+        <div className="pointer-events-none absolute -top-16 -left-20 h-56 w-56 rounded-full bg-cyan-500/20 blur-3xl" />
+        <div className="pointer-events-none absolute -bottom-16 -right-16 h-64 w-64 rounded-full bg-emerald-500/20 blur-3xl" />
+
+        <div className="relative w-full max-w-5xl grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6">
+          <section className="surface-card p-6 sm:p-8 md:p-10">
+            <span className="inline-flex h-8 items-center rounded-full border border-cyan-400/35 bg-cyan-500/10 px-3 text-[11px] font-medium tracking-wide text-cyan-200">
+              Plataforma segura de chat y posts
+            </span>
+            <h1 className="mt-4 text-3xl sm:text-4xl font-semibold tracking-tight text-gray-100">
+              Bienvenido a Swoou Chat
+            </h1>
+            <p className="mt-3 max-w-md text-sm sm:text-[15px] text-[color:var(--text-soft)]">
+              Inicia sesion con Google para entrar a tus conversaciones, salas y publicaciones en tiempo real.
+            </p>
+
+            <div className="mt-6 space-y-3">
+              <div className="flex items-start gap-3 rounded-xl border border-white/10 bg-white/5 p-3">
+                <ShieldCheck className="mt-0.5 h-4 w-4 text-emerald-300 shrink-0" />
+                <div>
+                  <p className="text-sm text-gray-100 font-medium">Acceso protegido</p>
+                  <p className="mt-0.5 text-xs text-[color:var(--text-soft)]">Sesion validada con Google y token seguro.</p>
+                </div>
+              </div>
+              <div className="flex items-start gap-3 rounded-xl border border-white/10 bg-white/5 p-3">
+                <Zap className="mt-0.5 h-4 w-4 text-amber-300 shrink-0" />
+                <div>
+                  <p className="text-sm text-gray-100 font-medium">Mensajeria instantanea</p>
+                  <p className="mt-0.5 text-xs text-[color:var(--text-soft)]">Chats privados y posts sincronizados al instante.</p>
+                </div>
+              </div>
+              <div className="flex items-start gap-3 rounded-xl border border-white/10 bg-white/5 p-3">
+                <Globe2 className="mt-0.5 h-4 w-4 text-cyan-300 shrink-0" />
+                <div>
+                  <p className="text-sm text-gray-100 font-medium">Comunidad activa</p>
+                  <p className="mt-0.5 text-xs text-[color:var(--text-soft)]">Crea salas publicas y conecta con usuarios online.</p>
+                </div>
+              </div>
+            </div>
+          </section>
+
+          <section className="surface-card p-6 sm:p-8 md:p-10 flex flex-col justify-center">
+            <p className="text-xs font-medium uppercase tracking-[0.16em] text-[color:var(--text-soft)]">Acceso</p>
+            <h2 className="mt-2 text-2xl font-semibold text-gray-100">Iniciar sesion</h2>
+            <p className="mt-2 text-sm text-[color:var(--text-soft)]">
+              Usa tu cuenta de Google para continuar.
+            </p>
+
+            <div className="mt-6 rounded-2xl border border-white/10 bg-[#0e171d] p-4 sm:p-5">
+              <div ref={googleButtonRef} className="min-h-[44px] flex justify-center" />
+            </div>
+
+            {authError ? (
+              <div className="mt-4 rounded-xl border border-red-500/30 bg-red-500/10 px-3 py-2">
+                <p className="text-sm text-red-300">{authError}</p>
+              </div>
+            ) : null}
+
+            <p className="mt-5 text-[11px] leading-relaxed text-[color:var(--text-soft)]">
+              Al continuar, autorizas el acceso basico de perfil para identificar tu cuenta dentro de la app.
+            </p>
+          </section>
         </div>
       </div>
     );

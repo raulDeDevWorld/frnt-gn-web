@@ -1,4 +1,4 @@
-
+﻿
 
 
 
@@ -169,7 +169,7 @@ const FileMessageRenderer = ({ msg, isMe, onMediaClick }) => {
 function MessageBubble({ msg, USER_ID, onMediaClick }) {
     const isMe = msg.from === USER_ID;
     
-    // Lógica del Visto: Si es mio, mostrar checks
+    // LÃ³gica del Visto: Si es mio, mostrar checks
     // Doble Check Gris (Enviado/Recibido) -> Doble Check Azul (Visto)
     const SeenIcon = isMe ? CheckCheck : null; 
     const iconColor = isMe ? (msg.seen ? "text-blue-500" : "text-gray-400 dark:text-gray-500") : "";
@@ -232,19 +232,19 @@ function ChatSidebar({
                 </div>
                 <div className="flex gap-2">
                     <button onClick={() => setDarkMode(!darkMode)} className="p-2 rounded-full hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors text-gray-500 dark:text-gray-300">
-                        {darkMode ? '☀️' : '🌙'}
+                        {darkMode ? 'â˜€ï¸' : 'ðŸŒ™'}
                     </button>
                 </div>
             </div>
             
             {/* Lista de Chats */}
             <div className="flex-1 overflow-y-auto custom-scrollbar">
-                {/* Chat Público */}
+                {/* Chat PÃºblico */}
                 <div onClick={() => onSelectUser(null)} className={`px-4 py-3 flex items-center gap-3 cursor-pointer hover:bg-[#f5f6f6] dark:hover:bg-[#202c33] transition-colors border-b border-gray-100 dark:border-gray-800 ${selectedUser === null ? "bg-[#f0f2f5] dark:bg-[#2a3942]" : ""}`}>
-                    <div className="w-12 h-12 rounded-full bg-[#00a884] flex items-center justify-center text-white text-xl shadow-sm">🌍</div>
+                    <div className="w-12 h-12 rounded-full bg-[#00a884] flex items-center justify-center text-white text-xl shadow-sm">ðŸŒ</div>
                     <div className="flex-1 min-w-0">
                         <div className="flex justify-between items-baseline mb-1">
-                            <span className="font-medium text-gray-900 dark:text-white text-[17px]">Chat Público</span>
+                            <span className="font-medium text-gray-900 dark:text-white text-[17px]">Chat PÃºblico</span>
                         </div>
                         <p className="text-sm text-gray-500 dark:text-gray-400 truncate">
                             {lastPublicMsg ? lastPublicMsg : "Haz clic para unirte al grupo"}
@@ -269,7 +269,7 @@ function ChatSidebar({
                     
                     return (
                         <div key={u} onClick={() => onSelectUser(u)} className={`px-4 py-3 flex items-center gap-3 cursor-pointer hover:bg-[#f5f6f6] dark:hover:bg-[#202c33] transition-colors border-b border-gray-100 dark:border-gray-800 ${selectedUser === u ? "bg-[#f0f2f5] dark:bg-[#2a3942]" : ""}`}>
-                            <div className="w-12 h-12 rounded-full bg-gray-200 dark:bg-gray-600 flex items-center justify-center text-gray-600 dark:text-gray-200 text-xl">👤</div>
+                            <div className="w-12 h-12 rounded-full bg-gray-200 dark:bg-gray-600 flex items-center justify-center text-gray-600 dark:text-gray-200 text-xl">ðŸ‘¤</div>
                             <div className="flex-1 min-w-0">
                                 <div className="flex justify-between items-center mb-1">
                                     <span className="font-medium text-gray-900 dark:text-white text-[17px] truncate">{u}</span>
@@ -280,7 +280,7 @@ function ChatSidebar({
                                         {lastMsg?.from === USER_ID && (
                                             <CheckCheck className={`w-3.5 h-3.5 ${lastMsg.seen ? 'text-blue-500' : 'text-gray-400'}`} />
                                         )}
-                                        {lastMsg ? (lastMsg.type === 'text' ? lastMsg.content : (lastMsg.type === 'audio' ? '🎤 Audio' : '📎 Archivo')) : '¡Saluda! 👋'}
+                                        {lastMsg ? (lastMsg.type === 'text' ? lastMsg.content : (lastMsg.type === 'audio' ? 'ðŸŽ¤ Audio' : 'ðŸ“Ž Archivo')) : 'Â¡Saluda! ðŸ‘‹'}
                                     </p>
                                     {unseen > 0 && (
                                         <span className="bg-[#25d366] text-white text-xs font-bold min-w-[20px] h-5 rounded-full flex items-center justify-center px-1 shadow-sm">
@@ -319,6 +319,7 @@ export default function ChatPage() {
     const [audioFile, setAudioFile] = useState(null);
     const [audioDuration, setAudioDuration] = useState(0);
     const [mediaViewerData, setMediaViewerData] = useState(null);
+    const [uiToast, setUiToast] = useState("");
 
     // Refs
     const socketRef = useRef(null);
@@ -326,10 +327,31 @@ export default function ChatPage() {
     const fileInputRef = useRef(null);
     const mediaRecorderRef = useRef(null);
     const chunksRef = useRef([]);
+    const toastTimerRef = useRef(null);
+
+    const showToast = useCallback((message) => {
+        const text = String(message || "").trim();
+        if (!text) return;
+        if (toastTimerRef.current) clearTimeout(toastTimerRef.current);
+        setUiToast(text);
+        toastTimerRef.current = setTimeout(() => {
+            setUiToast("");
+            toastTimerRef.current = null;
+        }, 3600);
+    }, []);
 
     useEffect(() => { setIsClient(true); }, []);
 
-    // --- 1. CONEXIÓN SOCKET ---
+    useEffect(() => {
+        return () => {
+            if (toastTimerRef.current) {
+                clearTimeout(toastTimerRef.current);
+                toastTimerRef.current = null;
+            }
+        };
+    }, []);
+
+    // --- 1. CONEXIÃ“N SOCKET ---
     useEffect(() => {
         if (!userId) return; // Seguridad
         
@@ -349,9 +371,9 @@ export default function ChatPage() {
                 const otherUser = msg.from;
                 const history = prev[otherUser] || [];
                 // Si estoy viendo el chat de quien me escribe, emitimos 'mark-seen'
-                // Nota: No tenemos acceso directo a 'selectedUser' (stale closure) aquí fácilmente sin ref,
-                // así que confiamos en el click del usuario o manejamos lógica más compleja.
-                // Por ahora, el usuario marcará visto al hacer click/entrar al chat.
+                // Nota: No tenemos acceso directo a 'selectedUser' (stale closure) aquÃ­ fÃ¡cilmente sin ref,
+                // asÃ­ que confiamos en el click del usuario o manejamos lÃ³gica mÃ¡s compleja.
+                // Por ahora, el usuario marcarÃ¡ visto al hacer click/entrar al chat.
                 return { ...prev, [otherUser]: [...history, { ...msg, private: true }] };
             });
         });
@@ -397,14 +419,14 @@ export default function ChatPage() {
 
     const handleSelectUser = (user) => {
         setSelectedUser(user);
-        setMobileView('chat'); // Cambiar a vista de chat en móvil
+        setMobileView('chat'); // Cambiar a vista de chat en mÃ³vil
         
-        // Lógica de marcar como visto al entrar
+        // LÃ³gica de marcar como visto al entrar
         if (user && privateChats[user]) {
             // 1. Avisar al servidor para que avise al remitente
             socketRef.current.emit('mark-seen', { from: userId, to: user });
             
-            // 2. Actualizar mi UI local (quitar contador de no leídos)
+            // 2. Actualizar mi UI local (quitar contador de no leÃ­dos)
             setPrivateChats(prev => ({
                 ...prev,
                 [user]: prev[user].map(m => m.from === user ? { ...m, seen: true } : m)
@@ -413,7 +435,7 @@ export default function ChatPage() {
     };
 
     const handleBack = () => {
-        setMobileView('list'); // Volver a la lista en móvil
+        setMobileView('list'); // Volver a la lista en mÃ³vil
     };
 
     const sendMessage = (content, type = "text", fileData = null) => {
@@ -442,7 +464,7 @@ export default function ChatPage() {
                 });
             }
         } else {
-            // Público
+            // PÃºblico
             setPublicMessages(prev => [...prev, { ...msgPayload, private: false, seen: true }]);
             
             if (type === "text") {
@@ -481,7 +503,10 @@ export default function ChatPage() {
             };
             mediaRecorderRef.current.start();
             setIsRecording(true);
-        } catch (e) { alert("Error Micrófono"); }
+        } catch (e) {
+            console.error("Error Micrófono", e);
+            showToast("No se pudo iniciar la grabacion de audio");
+        }
     };
 
     const stopRec = () => {
@@ -522,7 +547,7 @@ export default function ChatPage() {
     return (
         <div className={`flex h-screen overflow-hidden ${darkMode ? "dark bg-[#0b141a]" : "bg-gray-100"}`}>
             
-            {/* Sidebar: Oculto en móvil si hay chat abierto (mobileView === 'chat') */}
+            {/* Sidebar: Oculto en mÃ³vil si hay chat abierto (mobileView === 'chat') */}
             <ChatSidebar 
                 darkMode={darkMode} selectedUser={selectedUser} 
                 activeUsers={activeUsers} privateChats={privateChats}
@@ -532,7 +557,7 @@ export default function ChatPage() {
                 publicMessagesCount={publicMessages.length}
             />
 
-            {/* Chat Container: Oculto en móvil si NO hay chat abierto ('list') */}
+            {/* Chat Container: Oculto en mÃ³vil si NO hay chat abierto ('list') */}
             {/* En Desktop siempre se muestra (md:flex) */}
             <div className={`
                 flex-1 flex-col bg-[#efeae2] dark:bg-[#0b141a] relative 
@@ -545,11 +570,11 @@ export default function ChatPage() {
                     <div className="flex items-center gap-2">
                         <button onClick={handleBack} className="md:hidden p-2 -ml-2 text-gray-600 dark:text-white hover:bg-black/5 rounded-full"><ArrowLeft /></button>
                         <div className="w-10 h-10 rounded-full bg-[#00a884] flex items-center justify-center text-white text-lg cursor-pointer">
-                            {selectedUser ? '👤' : '🌍'}
+                            {selectedUser ? 'ðŸ‘¤' : 'ðŸŒ'}
                         </div>
                         <div className="flex flex-col justify-center ml-1 cursor-pointer">
-                            <p className="font-medium text-gray-900 dark:text-white leading-tight">{selectedUser || "Chat Público"}</p>
-                            <p className="text-xs text-gray-500 dark:text-gray-400 leading-tight">{selectedUser ? "en línea" : "Toca para info del grupo"}</p>
+                            <p className="font-medium text-gray-900 dark:text-white leading-tight">{selectedUser || "Chat PÃºblico"}</p>
+                            <p className="text-xs text-gray-500 dark:text-gray-400 leading-tight">{selectedUser ? "en lÃ­nea" : "Toca para info del grupo"}</p>
                         </div>
                     </div>
                     <div className="flex gap-4 text-[#00a884] dark:text-[#00a884] mr-2">
@@ -632,6 +657,11 @@ export default function ChatPage() {
                     onClose={() => setMediaViewerData(null)} 
                 />
             )}
+            {uiToast ? (
+                <div className="fixed top-4 right-4 z-[120] max-w-[320px] rounded-xl border border-red-400/35 bg-red-500/15 text-red-100 px-3 py-2.5 text-[12px] shadow-[0_14px_28px_rgba(0,0,0,0.28)] backdrop-blur">
+                    {uiToast}
+                </div>
+            ) : null}
         </div>
     );
 }
@@ -745,7 +775,7 @@ export default function ChatPage() {
 //   const [recordedDuration, setRecordedDuration] = useState(0);
 //   const [recordTime, setRecordTime] = useState(0);
   
-//   // Configuración de Micro
+//   // ConfiguraciÃ³n de Micro
 //   const [audioDevices, setAudioDevices] = useState([]);
 //   const [selectedDeviceId, setSelectedDeviceId] = useState("");
 //   const [showMicSettings, setShowMicSettings] = useState(false);
@@ -811,7 +841,7 @@ export default function ChatPage() {
 //   }, [publicMessages, privateChats, selectedUser, audioFile, isRecording]);
 
 //   // -------------------------------
-//   // 2. Lógica de Audio
+//   // 2. LÃ³gica de Audio
 //   // -------------------------------
 
 //   const formatTime = (time) => {
@@ -897,8 +927,8 @@ export default function ChatPage() {
 //       setIsRecording(true);
 //       setAudioFile(null); 
 //     } catch (error) {
-//       console.error("Error al iniciar la grabación:", error);
-//       alert("No se pudo acceder al micrófono.");
+//       console.error("Error al iniciar la grabaciÃ³n:", error);
+//       console.error("No se pudo acceder al micrÃ³fono.");
 //     }
 //   };
 
@@ -933,7 +963,7 @@ export default function ChatPage() {
 //   };
 
 //   // -------------------------------
-//   // 3. Lógica de Envío
+//   // 3. LÃ³gica de EnvÃ­o
 //   // -------------------------------
   
 //   const sendAudioMessage = () => {
@@ -952,7 +982,7 @@ export default function ChatPage() {
 //             file: base64Pure, 
 //             fileName: `audio-${Date.now()}.webm`, 
 //             fileType: mimeType,
-//             // --- SOLUCIÓN DE DURACIÓN: Enviamos la duración calculada ---
+//             // --- SOLUCIÃ“N DE DURACIÃ“N: Enviamos la duraciÃ³n calculada ---
 //             duration: recordedDuration 
 //         };
         
@@ -1038,9 +1068,9 @@ export default function ChatPage() {
       
 //       <div className={`fixed inset-y-0 left-0 z-50 w-64 bg-white dark:bg-gray-900 border-r border-gray-200 dark:border-gray-700 transform transition-transform duration-300 shadow-lg ${sidebarOpen ? "translate-x-0" : "-translate-x-full"} md:translate-x-0 md:static md:flex flex-col`}>
 //         <h2 className="px-6 py-5 font-bold text-xl">Usuarios</h2>
-//         <button onClick={() => setSelectedUser(null)} className={`w-full text-left p-4 my-1 rounded-xl ${selectedUser === null ? "bg-green-500 text-white" : "hover:bg-gray-100 dark:hover:bg-gray-800"}`}>🌍 Chat Público</button>
+//         <button onClick={() => setSelectedUser(null)} className={`w-full text-left p-4 my-1 rounded-xl ${selectedUser === null ? "bg-green-500 text-white" : "hover:bg-gray-100 dark:hover:bg-gray-800"}`}>ðŸŒ Chat PÃºblico</button>
 //         <ul className="flex-1 overflow-y-auto">
-//             {activeUsers.map(u => <li key={u} onClick={() => setSelectedUser(u)} className={`p-4 cursor-pointer rounded-xl ${selectedUser === u ? "bg-green-500 text-white" : "hover:bg-gray-100 dark:hover:bg-gray-800"}`}>👤 {u}</li>)}
+//             {activeUsers.map(u => <li key={u} onClick={() => setSelectedUser(u)} className={`p-4 cursor-pointer rounded-xl ${selectedUser === u ? "bg-green-500 text-white" : "hover:bg-gray-100 dark:hover:bg-gray-800"}`}>ðŸ‘¤ {u}</li>)}
 //         </ul>
 //         <div className="p-4 border-t flex justify-between items-center">
 //             <span className="dark:text-white">Modo oscuro</span>
@@ -1050,7 +1080,7 @@ export default function ChatPage() {
 
 //       <div className="flex-1 flex flex-col md:ml-64 bg-gray-50 dark:bg-gray-800 transition-colors">
 //         <div className="bg-green-500 px-6 py-4 flex justify-between text-white shadow-md">
-//           <h1 className="font-semibold">{selectedUser ? `Chat con ${selectedUser}` : "Chat Público"}</h1>
+//           <h1 className="font-semibold">{selectedUser ? `Chat con ${selectedUser}` : "Chat PÃºblico"}</h1>
 //           <span className="text-xs opacity-75">ID: {USER_ID}</span>
 //         </div>
 
@@ -1067,7 +1097,7 @@ export default function ChatPage() {
 //                                         <div className="flex items-center gap-2 bg-black/10 p-2 rounded-lg min-w-[250px]">
 //                                             <Volume2 className="h-5 w-5 flex-shrink-0" />
 //                                             <audio controls src={msg.audioURL} className="flex-1 h-8" />
-//                                             {/* --- SOLUCIÓN VISUAL: Mostramos la duración aquí si el navegador falla --- */}
+//                                             {/* --- SOLUCIÃ“N VISUAL: Mostramos la duraciÃ³n aquÃ­ si el navegador falla --- */}
 //                                             {msg.duration > 0 && (
 //                                               <span className="text-xs font-mono opacity-60 whitespace-nowrap">
 //                                                 {formatTime(msg.duration)}
@@ -1160,7 +1190,7 @@ export default function ChatPage() {
 //                         onKeyDown={(e) => e.key === "Enter" && sendText()} 
 //                     />
                     
-//                     <button onClick={() => setShowEmojiPicker(!showEmojiPicker)} className="p-3 rounded-full bg-yellow-400 hover:bg-yellow-300">😃</button>
+//                     <button onClick={() => setShowEmojiPicker(!showEmojiPicker)} className="p-3 rounded-full bg-yellow-400 hover:bg-yellow-300">ðŸ˜ƒ</button>
 
 //                     <div className="relative">
 //                         <button onClick={() => setShowMicSettings(!showMicSettings)} className="p-2 text-gray-400 hover:bg-gray-100 rounded-full">
@@ -1168,7 +1198,7 @@ export default function ChatPage() {
 //                         </button>
 //                         {showMicSettings && (
 //                              <div className="absolute bottom-14 right-0 w-48 bg-white dark:bg-gray-800 shadow-xl border rounded p-2 z-50">
-//                                 <p className="text-xs font-bold text-gray-500 mb-1">Micrófono:</p>
+//                                 <p className="text-xs font-bold text-gray-500 mb-1">MicrÃ³fono:</p>
 //                                 <select 
 //                                     className="w-full text-xs p-1 border rounded dark:bg-gray-700 dark:text-white"
 //                                     value={selectedDeviceId}
@@ -1274,7 +1304,7 @@ export default function ChatPage() {
 //   const [recordedDuration, setRecordedDuration] = useState(0);
 //   const [recordTime, setRecordTime] = useState(0);
   
-//   // Configuración de Micro
+//   // ConfiguraciÃ³n de Micro
 //   const [audioDevices, setAudioDevices] = useState([]);
 //   const [selectedDeviceId, setSelectedDeviceId] = useState("");
 //   const [showMicSettings, setShowMicSettings] = useState(false);
@@ -1316,7 +1346,7 @@ export default function ChatPage() {
 
 //     socketRef.current.on("active-users", (users) => setActiveUsers(users.filter((u) => u !== USER_ID)));
 
-//     // Cargar micrófonos
+//     // Cargar micrÃ³fonos
 //     const getMicrophones = async () => {
 //         try {
 //             // Solicitar permiso primero para poder listar las etiquetas de los dispositivos
@@ -1341,7 +1371,7 @@ export default function ChatPage() {
 //   }, [publicMessages, privateChats, selectedUser, audioFile, isRecording]);
 
 //   // -------------------------------
-//   // 2. Lógica de Audio (CORREGIDA PARA CHROME)
+//   // 2. LÃ³gica de Audio (CORREGIDA PARA CHROME)
 //   // -------------------------------
 
 //   const formatTime = (time) => {
@@ -1384,7 +1414,7 @@ export default function ChatPage() {
 //     }
 //   };
 
-//   // --- FUNCIÓN CLAVE: Detectar MIME type soportado dinámicamente ---
+//   // --- FUNCIÃ“N CLAVE: Detectar MIME type soportado dinÃ¡micamente ---
 //   const getSupportedMimeType = () => {
 //     const types = [
 //       "audio/webm;codecs=opus",
@@ -1398,13 +1428,13 @@ export default function ChatPage() {
 
 //   const startRecording = async () => {
 //     try {
-//       // Configuración más simple para Chrome (evita errores de OverconstrainedError)
+//       // ConfiguraciÃ³n mÃ¡s simple para Chrome (evita errores de OverconstrainedError)
 //       const constraints = { 
 //           audio: {
 //             deviceId: selectedDeviceId ? { exact: selectedDeviceId } : undefined,
 //             echoCancellation: true,
 //             noiseSuppression: true,
-//             // autoGainControl: true // A veces causa problemas en Chrome Mac/Windows específicos
+//             // autoGainControl: true // A veces causa problemas en Chrome Mac/Windows especÃ­ficos
 //           } 
 //       };
 
@@ -1413,7 +1443,7 @@ export default function ChatPage() {
 //       // 1. Detectar el mejor formato soportado por el navegador actual
 //       const mimeType = getSupportedMimeType();
       
-//       // 2. Opciones sin forzar bitrate (Chrome prefiere manejar esto automáticamente)
+//       // 2. Opciones sin forzar bitrate (Chrome prefiere manejar esto automÃ¡ticamente)
 //       const options = mimeType ? { mimeType } : {};
 
 //       const mediaRecorder = new MediaRecorder(stream, options);
@@ -1427,7 +1457,7 @@ export default function ChatPage() {
 //       };
 
 //       mediaRecorder.onstop = () => {
-//         // Crear Blob final usando el tipo que el navegador decidió usar
+//         // Crear Blob final usando el tipo que el navegador decidiÃ³ usar
 //         const finalMimeType = mediaRecorder.mimeType || options.mimeType || 'audio/webm';
 //         const audioBlob = new Blob(audioChunksRef.current, { type: finalMimeType });
         
@@ -1440,7 +1470,7 @@ export default function ChatPage() {
 //         setCurrentTime(0);
 //         setRecordedDuration(recordTimeRef.current);
 
-//         // Detener tracks para liberar el icono de "grabando" en la pestaña
+//         // Detener tracks para liberar el icono de "grabando" en la pestaÃ±a
 //         mediaRecorder.stream.getTracks().forEach(track => track.stop());
 //       };
 
@@ -1448,8 +1478,8 @@ export default function ChatPage() {
 //       setIsRecording(true);
 //       setAudioFile(null); 
 //     } catch (error) {
-//       console.error("Error al iniciar la grabación:", error);
-//       alert("No se pudo acceder al micrófono. Verifica los permisos del navegador.");
+//       console.error("Error al iniciar la grabaciÃ³n:", error);
+//       console.error("No se pudo acceder al micrÃ³fono. Verifica los permisos del navegador.");
 //     }
 //   };
 
@@ -1487,7 +1517,7 @@ export default function ChatPage() {
 //   };
 
 //   // -------------------------------
-//   // 3. Lógica de Envío
+//   // 3. LÃ³gica de EnvÃ­o
 //   // -------------------------------
   
 //   const sendAudioMessage = () => {
@@ -1497,7 +1527,7 @@ export default function ChatPage() {
 //     const mimeType = mediaRecorderRef.current?.mimeType || 'audio/webm';
 //     const blob = new Blob(audioChunksRef.current, { type: mimeType });
 
-//     // Usar FileReader es más seguro que atob para archivos binarios grandes
+//     // Usar FileReader es mÃ¡s seguro que atob para archivos binarios grandes
 //     const reader = new FileReader();
 //     reader.readAsDataURL(blob);
 //     reader.onloadend = () => {
@@ -1584,15 +1614,15 @@ export default function ChatPage() {
 //   return (
 //     <div className={`${darkMode ? "dark" : ""} flex h-screen overflow-hidden`}>
       
-//       {/* IMPORTANTÍSIMO: He eliminado <AudioRecorder/> de aquí porque ya tienes la lógica integrada abajo.
-//           Tenerlo aquí duplicaba el acceso al micrófono y causaba errores en Chrome. */}
+//       {/* IMPORTANTÃSIMO: He eliminado <AudioRecorder/> de aquÃ­ porque ya tienes la lÃ³gica integrada abajo.
+//           Tenerlo aquÃ­ duplicaba el acceso al micrÃ³fono y causaba errores en Chrome. */}
       
 //       {/* Sidebar */}
 //       <div className={`fixed inset-y-0 left-0 z-50 w-64 bg-white dark:bg-gray-900 border-r border-gray-200 dark:border-gray-700 transform transition-transform duration-300 shadow-lg ${sidebarOpen ? "translate-x-0" : "-translate-x-full"} md:translate-x-0 md:static md:flex flex-col`}>
 //         <h2 className="px-6 py-5 font-bold text-xl">Usuarios</h2>
-//         <button onClick={() => setSelectedUser(null)} className={`w-full text-left p-4 my-1 rounded-xl ${selectedUser === null ? "bg-green-500 text-white" : "hover:bg-gray-100 dark:hover:bg-gray-800"}`}>🌍 Chat Público</button>
+//         <button onClick={() => setSelectedUser(null)} className={`w-full text-left p-4 my-1 rounded-xl ${selectedUser === null ? "bg-green-500 text-white" : "hover:bg-gray-100 dark:hover:bg-gray-800"}`}>ðŸŒ Chat PÃºblico</button>
 //         <ul className="flex-1 overflow-y-auto">
-//             {activeUsers.map(u => <li key={u} onClick={() => setSelectedUser(u)} className={`p-4 cursor-pointer rounded-xl ${selectedUser === u ? "bg-green-500 text-white" : "hover:bg-gray-100 dark:hover:bg-gray-800"}`}>👤 {u}</li>)}
+//             {activeUsers.map(u => <li key={u} onClick={() => setSelectedUser(u)} className={`p-4 cursor-pointer rounded-xl ${selectedUser === u ? "bg-green-500 text-white" : "hover:bg-gray-100 dark:hover:bg-gray-800"}`}>ðŸ‘¤ {u}</li>)}
 //         </ul>
 //         <div className="p-4 border-t flex justify-between items-center">
 //             <span className="dark:text-white">Modo oscuro</span>
@@ -1603,7 +1633,7 @@ export default function ChatPage() {
 //       {/* Area de Chat */}
 //       <div className="flex-1 flex flex-col md:ml-64 bg-gray-50 dark:bg-gray-800 transition-colors">
 //         <div className="bg-green-500 px-6 py-4 flex justify-between text-white shadow-md">
-//           <h1 className="font-semibold">{selectedUser ? `Chat con ${selectedUser}` : "Chat Público"}</h1>
+//           <h1 className="font-semibold">{selectedUser ? `Chat con ${selectedUser}` : "Chat PÃºblico"}</h1>
 //           <span className="text-xs opacity-75">ID: {USER_ID}</span>
 //         </div>
 
@@ -1638,7 +1668,7 @@ export default function ChatPage() {
 
 //         {showEmojiPicker && <div className="absolute bottom-20 right-4 z-50"><Picker onEmojiClick={onEmojiClick} /></div>}
 
-//         {/* --- BARRA DE ENTRADA DINÁMICA --- */}
+//         {/* --- BARRA DE ENTRADA DINÃMICA --- */}
 //         <div className="p-3 bg-white dark:bg-gray-900 border-t dark:border-gray-700 shadow-lg">
             
 //             {audioFile && (
@@ -1708,7 +1738,7 @@ export default function ChatPage() {
 //                         onKeyDown={(e) => e.key === "Enter" && sendText()} 
 //                     />
                     
-//                     <button onClick={() => setShowEmojiPicker(!showEmojiPicker)} className="p-3 rounded-full bg-yellow-400 hover:bg-yellow-300">😃</button>
+//                     <button onClick={() => setShowEmojiPicker(!showEmojiPicker)} className="p-3 rounded-full bg-yellow-400 hover:bg-yellow-300">ðŸ˜ƒ</button>
 
 //                     <div className="relative">
 //                         <button onClick={() => setShowMicSettings(!showMicSettings)} className="p-2 text-gray-400 hover:bg-gray-100 rounded-full">
@@ -1716,7 +1746,7 @@ export default function ChatPage() {
 //                         </button>
 //                         {showMicSettings && (
 //                              <div className="absolute bottom-14 right-0 w-48 bg-white dark:bg-gray-800 shadow-xl border rounded p-2 z-50">
-//                                 <p className="text-xs font-bold text-gray-500 mb-1">Micrófono:</p>
+//                                 <p className="text-xs font-bold text-gray-500 mb-1">MicrÃ³fono:</p>
 //                                 <select 
 //                                     className="w-full text-xs p-1 border rounded dark:bg-gray-700 dark:text-white"
 //                                     value={selectedDeviceId}
@@ -1812,7 +1842,7 @@ export default function ChatPage() {
 //   const [recordedDuration, setRecordedDuration] = useState(0);
 //   const [recordTime, setRecordTime] = useState(0);
   
-//   // Configuración de Micro
+//   // ConfiguraciÃ³n de Micro
 //   const [audioDevices, setAudioDevices] = useState([]);
 //   const [selectedDeviceId, setSelectedDeviceId] = useState("");
 //   const [showMicSettings, setShowMicSettings] = useState(false);
@@ -1855,7 +1885,7 @@ export default function ChatPage() {
 
 //     socketRef.current.on("active-users", (users) => setActiveUsers(users.filter((u) => u !== USER_ID)));
 
-//     // Cargar micrófonos
+//     // Cargar micrÃ³fonos
 //     const getMicrophones = async () => {
 //         try {
 //             await navigator.mediaDevices.getUserMedia({ audio: true }).then(s => s.getTracks().forEach(t => t.stop()));
@@ -1873,10 +1903,10 @@ export default function ChatPage() {
 //   // Scroll al final al recibir mensajes
 //   useEffect(() => {
 //     bottomRef.current?.scrollIntoView({ behavior: "smooth" });
-//   }, [publicMessages, privateChats, selectedUser, audioFile, isRecording]); // Añadido audioFile/isRecording para scroll al cambiar UI
+//   }, [publicMessages, privateChats, selectedUser, audioFile, isRecording]); // AÃ±adido audioFile/isRecording para scroll al cambiar UI
 
 //   // -------------------------------
-//   // 2. Lógica de Audio (Tu componente integrado)
+//   // 2. LÃ³gica de Audio (Tu componente integrado)
 //   // -------------------------------
 
 //   // Formato de tiempo mm:ss
@@ -1894,7 +1924,7 @@ export default function ChatPage() {
 //     };
 //   }, [audioFile]);
 
-//   // Timer de grabación
+//   // Timer de grabaciÃ³n
 //   useEffect(() => {
 //     let interval;
 //     if (isRecording) {
@@ -1908,7 +1938,7 @@ export default function ChatPage() {
 //         });
 //       }, 1000);
 //     } else {
-//         // No reseteamos aquí para mantener el último tiempo si paramos
+//         // No reseteamos aquÃ­ para mantener el Ãºltimo tiempo si paramos
 //     }
 //     return () => { if (interval) clearInterval(interval); };
 //   }, [isRecording]);
@@ -1956,11 +1986,11 @@ export default function ChatPage() {
 //         if (audioFile) URL.revokeObjectURL(audioFile);
         
 //         const audioURL = URL.createObjectURL(audioBlob);
-//         setAudioFile(audioURL); // Esto activa la vista de "Previsualización"
+//         setAudioFile(audioURL); // Esto activa la vista de "PrevisualizaciÃ³n"
         
 //         setIsPlaying(false);
 //         setCurrentTime(0);
-//         setRecordedDuration(recordTimeRef.current); // Guardar duración final
+//         setRecordedDuration(recordTimeRef.current); // Guardar duraciÃ³n final
 
 //         // Detener tracks
 //         mediaRecorderRef.current.stream.getTracks().forEach(track => track.stop());
@@ -1970,8 +2000,8 @@ export default function ChatPage() {
 //       setIsRecording(true);
 //       setAudioFile(null); // Limpiar anterior
 //     } catch (error) {
-//       console.error("Error al iniciar la grabación:", error);
-//       alert("No se pudo acceder al micrófono.");
+//       console.error("Error al iniciar la grabaciÃ³n:", error);
+//       console.error("No se pudo acceder al micrÃ³fono.");
 //     }
 //   };
 
@@ -2005,7 +2035,7 @@ export default function ChatPage() {
 //   };
 
 //   // -------------------------------
-//   // 3. Lógica de Envío (Texto y Audio)
+//   // 3. LÃ³gica de EnvÃ­o (Texto y Audio)
 //   // -------------------------------
   
 //   // Enviar Audio Confirmado
@@ -2039,7 +2069,7 @@ export default function ChatPage() {
 //             setPublicMessages(prev => [...prev, { ...localMsg, private: false }]);
 //         }
 
-//         // Limpiar estado después de enviar
+//         // Limpiar estado despuÃ©s de enviar
 //         cancelRecording();
 //     };
 //     reader.readAsDataURL(blob);
@@ -2106,9 +2136,9 @@ export default function ChatPage() {
 //       <AudioRecorder/>
 //       <div className={`fixed inset-y-0 left-0 z-50 w-64 bg-white dark:bg-gray-900 border-r border-gray-200 dark:border-gray-700 transform transition-transform duration-300 shadow-lg ${sidebarOpen ? "translate-x-0" : "-translate-x-full"} md:translate-x-0 md:static md:flex flex-col`}>
 //         <h2 className="px-6 py-5 font-bold text-xl">Usuarios</h2>
-//         <button onClick={() => setSelectedUser(null)} className={`w-full text-left p-4 my-1 rounded-xl ${selectedUser === null ? "bg-green-500 text-white" : "hover:bg-gray-100 dark:hover:bg-gray-800"}`}>🌍 Chat Público</button>
+//         <button onClick={() => setSelectedUser(null)} className={`w-full text-left p-4 my-1 rounded-xl ${selectedUser === null ? "bg-green-500 text-white" : "hover:bg-gray-100 dark:hover:bg-gray-800"}`}>ðŸŒ Chat PÃºblico</button>
 //         <ul className="flex-1 overflow-y-auto">
-//             {activeUsers.map(u => <li key={u} onClick={() => setSelectedUser(u)} className={`p-4 cursor-pointer rounded-xl ${selectedUser === u ? "bg-green-500 text-white" : "hover:bg-gray-100 dark:hover:bg-gray-800"}`}>👤 {u}</li>)}
+//             {activeUsers.map(u => <li key={u} onClick={() => setSelectedUser(u)} className={`p-4 cursor-pointer rounded-xl ${selectedUser === u ? "bg-green-500 text-white" : "hover:bg-gray-100 dark:hover:bg-gray-800"}`}>ðŸ‘¤ {u}</li>)}
 //         </ul>
 //         <div className="p-4 border-t flex justify-between items-center">
 //             <span className="dark:text-white">Modo oscuro</span>
@@ -2119,7 +2149,7 @@ export default function ChatPage() {
 //       {/* Area de Chat */}
 //       <div className="flex-1 flex flex-col md:ml-64 bg-gray-50 dark:bg-gray-800 transition-colors">
 //         <div className="bg-green-500 px-6 py-4 flex justify-between text-white shadow-md">
-//           <h1 className="font-semibold">{selectedUser ? `Chat con ${selectedUser}` : "Chat Público"}</h1>
+//           <h1 className="font-semibold">{selectedUser ? `Chat con ${selectedUser}` : "Chat PÃºblico"}</h1>
 //           <span className="text-xs opacity-75">ID: {USER_ID}</span>
 //         </div>
 
@@ -2154,13 +2184,13 @@ export default function ChatPage() {
 
 //         {showEmojiPicker && <div className="absolute bottom-20 right-4 z-50"><Picker onEmojiClick={onEmojiClick} /></div>}
 
-//         {/* --- BARRA DE ENTRADA DINÁMICA --- */}
+//         {/* --- BARRA DE ENTRADA DINÃMICA --- */}
 //         <div className="p-3 bg-white dark:bg-gray-900 border-t dark:border-gray-700 shadow-lg">
             
-//             {/* ESTADO 1: PREVISUALIZACIÓN (Audio grabado listo para enviar) */}
+//             {/* ESTADO 1: PREVISUALIZACIÃ“N (Audio grabado listo para enviar) */}
 //             {audioFile && (
 //                 <div className="flex items-center gap-3 w-full animate-in fade-in slide-in-from-bottom-2">
-//                      {/* Botón Eliminar */}
+//                      {/* BotÃ³n Eliminar */}
 //                     <button onClick={cancelRecording} className="p-3 text-red-500 hover:bg-red-100 rounded-full transition-colors">
 //                         <Trash2 className="w-5 h-5" />
 //                     </button>
@@ -2187,7 +2217,7 @@ export default function ChatPage() {
 //                             </div>
 //                         </div>
 
-//                         {/* Elemento audio oculto para la lógica */}
+//                         {/* Elemento audio oculto para la lÃ³gica */}
 //                         <audio
 //                             ref={audioRef}
 //                             src={audioFile}
@@ -2197,14 +2227,14 @@ export default function ChatPage() {
 //                         />
 //                     </div>
 
-//                     {/* Botón Enviar */}
+//                     {/* BotÃ³n Enviar */}
 //                     <button onClick={sendAudioMessage} className="p-3 bg-green-500 text-white rounded-full hover:bg-green-600 shadow-lg">
 //                         <SendHorizontal className="w-5 h-5" />
 //                     </button>
 //                 </div>
 //             )}
 
-//             {/* ESTADO 2: GRABANDO (Timer y Botón Parar) */}
+//             {/* ESTADO 2: GRABANDO (Timer y BotÃ³n Parar) */}
 //             {!audioFile && isRecording && (
 //                 <div className="flex items-center justify-between w-full px-2 animate-pulse">
 //                      <div className="flex items-center gap-2 text-red-500 font-mono font-bold">
@@ -2217,7 +2247,7 @@ export default function ChatPage() {
 //                 </div>
 //             )}
 
-//             {/* ESTADO 3: INPUT NORMAL (Texto y Botón Mic) */}
+//             {/* ESTADO 3: INPUT NORMAL (Texto y BotÃ³n Mic) */}
 //             {!audioFile && !isRecording && (
 //                 <div className="flex items-center gap-2">
 //                     <button onClick={() => fileInputRef.current.click()} className="p-2 rounded-full bg-yellow-400 hover:bg-yellow-300"><Paperclip className="h-5 w-5 text-black" /></button>
@@ -2231,16 +2261,16 @@ export default function ChatPage() {
 //                         onKeyDown={(e) => e.key === "Enter" && sendText()} 
 //                     />
                     
-//                     <button onClick={() => setShowEmojiPicker(!showEmojiPicker)} className="p-3 rounded-full bg-yellow-400 hover:bg-yellow-300">😃</button>
+//                     <button onClick={() => setShowEmojiPicker(!showEmojiPicker)} className="p-3 rounded-full bg-yellow-400 hover:bg-yellow-300">ðŸ˜ƒ</button>
 
-//                     {/* Selector de Micrófono */}
+//                     {/* Selector de MicrÃ³fono */}
 //                     <div className="relative">
 //                         <button onClick={() => setShowMicSettings(!showMicSettings)} className="p-2 text-gray-400 hover:bg-gray-100 rounded-full">
 //                             <Settings className="h-5 w-5" />
 //                         </button>
 //                         {showMicSettings && (
 //                              <div className="absolute bottom-14 right-0 w-48 bg-white dark:bg-gray-800 shadow-xl border rounded p-2 z-50">
-//                                 <p className="text-xs font-bold text-gray-500 mb-1">Micrófono:</p>
+//                                 <p className="text-xs font-bold text-gray-500 mb-1">MicrÃ³fono:</p>
 //                                 <select 
 //                                     className="w-full text-xs p-1 border rounded dark:bg-gray-700 dark:text-white"
 //                                     value={selectedDeviceId}
@@ -2286,7 +2316,7 @@ export default function ChatPage() {
 // const USER_ID = "user-" + Math.floor(Math.random() * 9999);
 
 // // -------------------------------
-// // Función para obtener URL de audio
+// // FunciÃ³n para obtener URL de audio
 // // -------------------------------
 // const getAudioURL = (file, fileType) => {
 //   if (file.startsWith("data:")) return file;
@@ -2320,7 +2350,7 @@ export default function ChatPage() {
 //     socketRef.current = io("http://localhost:4000", { query: { userId: USER_ID } });
 
 //     socketRef.current.on("connect", () => {
-//       console.log("🔵 Conectado al socket:", socketRef.current.id);
+//       console.log("ðŸ”µ Conectado al socket:", socketRef.current.id);
 //     });
 
 //     socketRef.current.on("receive-message", (msg) => {
@@ -2409,11 +2439,11 @@ export default function ChatPage() {
 //   };
 
 //   // -------------------------------
-//   // Grabación de audio
+//   // GrabaciÃ³n de audio
 //   // -------------------------------
 //   const startRecording = async () => {
 //     if (!navigator.mediaDevices?.getUserMedia) {
-//       alert("Tu navegador no soporta grabación de audio");
+//       console.error("Tu navegador no soporta grabaciÃ³n de audio");
 //       return;
 //     }
 
@@ -2499,7 +2529,7 @@ export default function ChatPage() {
 //             selectedUser === null ? "bg-green-500 text-white shadow-lg" : ""
 //           }`}
 //         >
-//           🌍 Chat Público
+//           ðŸŒ Chat PÃºblico
 //         </button>
 
 //         <ul className="flex-1 overflow-y-auto divide-y divide-gray-200 dark:divide-gray-700">
@@ -2514,7 +2544,7 @@ export default function ChatPage() {
 //                 selectedUser === user ? "bg-green-500 text-white shadow-lg" : ""
 //               }`}
 //             >
-//               👤 {user}
+//               ðŸ‘¤ {user}
 //             </li>
 //           ))}
 //           {activeUsers.length === 0 && (
@@ -2533,19 +2563,19 @@ export default function ChatPage() {
 //         </div>
 //       </div>
 
-//       {/* Botón para abrir sidebar en móvil */}
+//       {/* BotÃ³n para abrir sidebar en mÃ³vil */}
 //       <button
 //         className="fixed top-4 left-4 z-50 md:hidden p-3 bg-green-500 text-white rounded-full shadow-lg"
 //         onClick={() => setSidebarOpen(true)}
 //       >
-//         ☰
+//         â˜°
 //       </button>
 
 //       {/* Chat */}
 //       <div className="flex-1 flex flex-col md:ml-64 bg-gray-50 dark:bg-gray-800 transition-colors duration-300">
 //         {/* Header */}
 //         <div className="bg-green-500 dark:bg-green-600 text-white px-6 py-4 flex justify-between items-center shadow-md">
-//           <h1 className="text-lg font-semibold">{selectedUser ? `Chat con ${selectedUser}` : "Chat Público"}</h1>
+//           <h1 className="text-lg font-semibold">{selectedUser ? `Chat con ${selectedUser}` : "Chat PÃºblico"}</h1>
 //           <span className="text-sm opacity-80">ID: {USER_ID}</span>
 //         </div>
 
@@ -2577,14 +2607,14 @@ export default function ChatPage() {
 //                           download={msg.fileName}
 //                           className={`underline ${isMe ? "text-white" : "text-blue-700"}`}
 //                         >
-//                           📎 {msg.fileName}
+//                           ðŸ“Ž {msg.fileName}
 //                         </a>
 //                       )}
 //                     </div>
 //                   )}
 //                   {isMe && selectedUser && (
 //                     <span className="absolute bottom-0 right-1 text-xs text-gray-500">
-//                       {msg.seen ? "✔✔" : "✔"} {new Date(msg.timestamp || Date.now()).toLocaleTimeString([], { hour: '2-digit', minute:'2-digit' })}
+//                       {msg.seen ? "âœ”âœ”" : "âœ”"} {new Date(msg.timestamp || Date.now()).toLocaleTimeString([], { hour: '2-digit', minute:'2-digit' })}
 //                     </span>
 //                   )}
 //                 </div>
@@ -2600,7 +2630,7 @@ export default function ChatPage() {
 //           </div>
 //         )}
 
-//         {/* Input fijo en móvil */}
+//         {/* Input fijo en mÃ³vil */}
 //         <div className="p-3 flex items-center gap-3 shadow-lg fixed bottom-0 left-0 right-0 md:relative md:bottom-auto md:left-auto md:right-auto bg-white dark:bg-gray-900 transition-colors duration-300">
 //           <button
 //             onClick={() => fileInputRef.current.click()}
@@ -2626,7 +2656,7 @@ export default function ChatPage() {
 //             onClick={() => setShowEmojiPicker((prev) => !prev)}
 //             className="p-3 rounded-full bg-yellow-400 hover:bg-yellow-300 transition-all duration-300 shadow-lg"
 //           >
-//             😃
+//             ðŸ˜ƒ
 //           </button>
 
 //           {!recording ? (
@@ -2692,11 +2722,11 @@ export default function ChatPage() {
 //     socketRef.current = io("http://localhost:4000", { query: { userId: USER_ID } });
 
 //     socketRef.current.on("connect", () => {
-//       console.log("🔵 Conectado al socket, ID:", socketRef.current.id);
+//       console.log("ðŸ”µ Conectado al socket, ID:", socketRef.current.id);
 //     });
 
 //     socketRef.current.on("receive-message", (msg) => {
-//       console.log("📩 Mensaje recibido:", msg);
+//       console.log("ðŸ“© Mensaje recibido:", msg);
 
 //       // Convertir audio base64 a URL si aplica
 //       if (msg.type === "audio" && msg.file) {
@@ -2745,7 +2775,7 @@ export default function ChatPage() {
 
 //     return () => {
 //       socketRef.current.disconnect();
-//       console.log("🔴 Desconectado del socket");
+//       console.log("ðŸ”´ Desconectado del socket");
 //     };
 //   }, []);
 
@@ -2800,11 +2830,11 @@ export default function ChatPage() {
 //   };
 
 //   // -------------------------------
-//   // Audio grabación
+//   // Audio grabaciÃ³n
 //   // -------------------------------
 //   const startRecording = async () => {
 //     if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
-//       alert("Tu navegador no soporta grabación de audio");
+//       console.error("Tu navegador no soporta grabaciÃ³n de audio");
 //       return;
 //     }
 
@@ -2893,7 +2923,7 @@ export default function ChatPage() {
 //         {/* Header */}
 //         <div className="bg-green-500 dark:bg-green-600 text-white px-6 py-4 flex justify-between items-center shadow-md">
 //           <h1 className="text-lg font-semibold">
-//             {selectedUser ? `Chat con ${selectedUser}` : "Chat Público"}
+//             {selectedUser ? `Chat con ${selectedUser}` : "Chat PÃºblico"}
 //           </h1>
 //           <span className="text-sm opacity-80">ID: {USER_ID}</span>
 //         </div>
@@ -2929,7 +2959,7 @@ export default function ChatPage() {
 //                           download={msg.fileName}
 //                           className={`underline ${isMe ? "text-white" : darkMode ? "text-blue-300" : "text-blue-700"}`}
 //                         >
-//                           📎 {msg.fileName}
+//                           ðŸ“Ž {msg.fileName}
 //                         </a>
 //                       )}
 //                     </div>
@@ -2937,7 +2967,7 @@ export default function ChatPage() {
 
 //                   {isMe && selectedUser && (
 //                     <span className="absolute bottom-1 right-2 text-xs opacity-70">
-//                       {msg.seen ? "✔✔" : "✔"}
+//                       {msg.seen ? "âœ”âœ”" : "âœ”"}
 //                     </span>
 //                   )}
 //                   {!isMe && (
@@ -2984,7 +3014,7 @@ export default function ChatPage() {
 //             onClick={() => setShowEmojiPicker((prev) => !prev)}
 //             className="p-3 rounded-full bg-yellow-400 hover:bg-yellow-300 transition-all duration-300 shadow-lg"
 //           >
-//             😃
+//             ðŸ˜ƒ
 //           </button>
 
 //           {!recording ? (
@@ -3136,7 +3166,7 @@ export default function ChatPage() {
 //           onClick={() => { setSelectedUser(null); setSidebarOpen(false); }}
 //           className={`w-full text-left p-4 my-1 hover:bg-yellow-400 transition-all duration-300 rounded-xl ${selectedUser === null ? "bg-green-500 text-white shadow-lg" : ""}`}
 //         >
-//           🌍 Chat Público
+//           ðŸŒ Chat PÃºblico
 //         </button>
 
 //         <ul className="flex-1 overflow-y-auto divide-y divide-gray-200 dark:divide-gray-700">
@@ -3146,7 +3176,7 @@ export default function ChatPage() {
 //               onClick={() => { setSelectedUser(user); setSidebarOpen(false); }}
 //               className={`p-4 cursor-pointer hover:bg-yellow-400 transition-all duration-300 rounded-xl ${selectedUser === user ? "bg-green-500 text-white shadow-lg" : ""}`}
 //             >
-//               👤 {user}
+//               ðŸ‘¤ {user}
 //             </li>
 //           ))}
 //           {activeUsers.length === 0 && <li className="p-4 text-gray-400 dark:text-gray-500 text-sm">Nadie conectado</li>}
@@ -3158,19 +3188,19 @@ export default function ChatPage() {
 //         </div>
 //       </div>
 
-//       {/* Botón para abrir sidebar en móvil */}
+//       {/* BotÃ³n para abrir sidebar en mÃ³vil */}
 //       <button
 //         className="fixed top-4 left-4 z-50 md:hidden p-3 bg-green-500 text-white rounded-full shadow-lg"
 //         onClick={() => setSidebarOpen(true)}
 //       >
-//         ☰
+//         â˜°
 //       </button>
 
 //       {/* Chat */}
 //       <div className="flex-1 flex flex-col md:ml-64 bg-gray-50 dark:bg-gray-800 transition-colors duration-300">
 //         {/* Header */}
 //         <div className="bg-green-500 dark:bg-green-600 text-white px-6 py-4 flex justify-between items-center shadow-md">
-//           <h1 className="text-lg font-semibold">{selectedUser ? `Chat con ${selectedUser}` : "Chat Público"}</h1>
+//           <h1 className="text-lg font-semibold">{selectedUser ? `Chat con ${selectedUser}` : "Chat PÃºblico"}</h1>
 //           <span className="text-sm opacity-80">ID: {USER_ID}</span>
 //         </div>
 
@@ -3199,7 +3229,7 @@ export default function ChatPage() {
 //                           download={msg.fileName}
 //                           className={`underline ${isMe ? "text-white" : darkMode ? "text-blue-300" : "text-blue-700"}`}
 //                         >
-//                           📎 {msg.fileName}
+//                           ðŸ“Ž {msg.fileName}
 //                         </a>
 //                       )}
 //                     </div>
@@ -3207,7 +3237,7 @@ export default function ChatPage() {
 
 //                   {isMe && selectedUser && (
 //                     <span className="absolute bottom-1 right-2 text-xs opacity-70">
-//                       {msg.seen ? "✔✔" : "✔"}
+//                       {msg.seen ? "âœ”âœ”" : "âœ”"}
 //                     </span>
 //                   )}
 //                   {!isMe && (
@@ -3228,7 +3258,7 @@ export default function ChatPage() {
 //           </div>
 //         )}
 
-//         {/* Input fijo en móvil */}
+//         {/* Input fijo en mÃ³vil */}
 //         <div className="p-3 flex items-center gap-3 shadow-lg fixed bottom-0 left-0 right-0 md:relative md:bottom-auto md:left-auto md:right-auto bg-white dark:bg-gray-900 transition-colors duration-300">
 //           <button
 //             onClick={() => fileInputRef.current.click()}
@@ -3250,7 +3280,7 @@ export default function ChatPage() {
 //             onClick={() => setShowEmojiPicker((prev) => !prev)}
 //             className="p-3 rounded-full bg-yellow-400 hover:bg-yellow-300 transition-all duration-300 shadow-lg"
 //           >
-//             😃
+//             ðŸ˜ƒ
 //           </button>
 
 //           <button
@@ -3300,7 +3330,7 @@ export default function ChatPage() {
 //         const otherUser = msg.from === USER_ID ? msg.to : msg.from;
 //         setPrivateChats((prev) => {
 //           const prevMsgs = prev[otherUser] || [];
-//           // Si es tu mensaje recién enviado desde el server, agrega 'seen' como false
+//           // Si es tu mensaje reciÃ©n enviado desde el server, agrega 'seen' como false
 //           if (msg.from === USER_ID && msg.seen === undefined) msg.seen = false;
 //           return { ...prev, [otherUser]: [...prevMsgs, msg] };
 //         });
@@ -3334,7 +3364,7 @@ export default function ChatPage() {
 
 //     if (selectedUser) {
 //       socket.emit("private-message", { to: selectedUser, message: text });
-//       // No agregamos manualmente el mensaje, el socket lo retornará
+//       // No agregamos manualmente el mensaje, el socket lo retornarÃ¡
 //     } else {
 //       socket.emit("send-message", text);
 //     }
@@ -3391,7 +3421,7 @@ export default function ChatPage() {
 //             selectedUser === null ? "bg-blue-100" : ""
 //           }`}
 //         >
-//           🌍 Chat Público
+//           ðŸŒ Chat PÃºblico
 //         </button>
 
 //         <ul className="flex-1 divide-y overflow-y-auto">
@@ -3403,7 +3433,7 @@ export default function ChatPage() {
 //                 selectedUser === user ? "bg-blue-100" : ""
 //               }`}
 //             >
-//               👤 {user}
+//               ðŸ‘¤ {user}
 //             </li>
 //           ))}
 //           {activeUsers.length === 0 && (
@@ -3417,7 +3447,7 @@ export default function ChatPage() {
 //         {/* Header */}
 //         <div className="bg-blue-600 text-white px-4 py-3 flex justify-between items-center shadow">
 //           <h1 className="text-lg font-semibold">
-//             {selectedUser ? `Chat privado con ${selectedUser}` : "Chat Público"}
+//             {selectedUser ? `Chat privado con ${selectedUser}` : "Chat PÃºblico"}
 //           </h1>
 //           <span className="text-sm opacity-80">ID: {USER_ID}</span>
 //         </div>
@@ -3446,7 +3476,7 @@ export default function ChatPage() {
 //                           download={msg.fileName}
 //                           className={`underline ${isMe ? "text-white" : "text-blue-700"}`}
 //                         >
-//                           📎 {msg.fileName}
+//                           ðŸ“Ž {msg.fileName}
 //                         </a>
 //                       )}
 //                     </div>
@@ -3455,7 +3485,7 @@ export default function ChatPage() {
 //                   {/* Checks estilo WhatsApp */}
 //                   {isMe && selectedUser && (
 //                     <span className="absolute bottom-1 right-2 text-xs opacity-70">
-//                       {msg.seen ? "✔✔" : "✔"}
+//                       {msg.seen ? "âœ”âœ”" : "âœ”"}
 //                     </span>
 //                   )}
 
@@ -3477,7 +3507,7 @@ export default function ChatPage() {
 //             onClick={() => fileInputRef.current.click()}
 //             className="p-2 bg-gray-200 rounded-full hover:bg-gray-300"
 //           >
-//             📎
+//             ðŸ“Ž
 //           </button>
 
 //           <input type="file" hidden ref={fileInputRef} onChange={sendFile} />
@@ -3494,7 +3524,7 @@ export default function ChatPage() {
 //             onClick={() => setShowEmojiPicker((prev) => !prev)}
 //             className="p-2 bg-gray-200 rounded-full hover:bg-gray-300"
 //           >
-//             😃
+//             ðŸ˜ƒ
 //           </button>
 
 //           <button
@@ -3552,7 +3582,7 @@ export default function ChatPage() {
 //   const bottomRef = useRef(null);
 
 //   // ----------------------------
-//   // Conexión Socket
+//   // ConexiÃ³n Socket
 //   // ----------------------------
 //   useEffect(() => {
 //     socket = io("http://localhost:4000", {
@@ -3648,7 +3678,7 @@ export default function ChatPage() {
 //             selectedUser === null ? "bg-blue-100" : ""
 //           }`}
 //         >
-//           🌍 Chat Público
+//           ðŸŒ Chat PÃºblico
 //         </button>
 
 //         <ul className="flex-1 divide-y overflow-y-auto">
@@ -3660,7 +3690,7 @@ export default function ChatPage() {
 //                 selectedUser === user ? "bg-blue-100" : ""
 //               }`}
 //             >
-//               👤 {user}
+//               ðŸ‘¤ {user}
 //             </li>
 //           ))}
 //           {activeUsers.length === 0 && (
@@ -3676,7 +3706,7 @@ export default function ChatPage() {
 //         {/* Header */}
 //         <div className="bg-blue-600 text-white px-4 py-3 flex justify-between items-center shadow">
 //           <h1 className="text-lg font-semibold">
-//             {selectedUser ? `Chat privado con ${selectedUser}` : "Chat Público"}
+//             {selectedUser ? `Chat privado con ${selectedUser}` : "Chat PÃºblico"}
 //           </h1>
 //           <span className="text-sm opacity-80">ID: {USER_ID}</span>
 //         </div>
@@ -3713,7 +3743,7 @@ export default function ChatPage() {
 //                           download={msg.fileName}
 //                           className="underline text-blue-700"
 //                         >
-//                           📎 {msg.fileName}
+//                           ðŸ“Ž {msg.fileName}
 //                         </a>
 //                       )}
 //                     </div>
@@ -3735,7 +3765,7 @@ export default function ChatPage() {
 //             onClick={() => fileInputRef.current.click()}
 //             className="p-2 bg-gray-200 rounded-full hover:bg-gray-300"
 //           >
-//             📎
+//             ðŸ“Ž
 //           </button>
 
 //           <input type="file" hidden ref={fileInputRef} onChange={sendFile} />
@@ -3803,7 +3833,7 @@ export default function ChatPage() {
 //   const bottomRef = useRef(null);
 
 //   // ------------------------------------------------------
-//   //                CONEXIÓN SOCKET
+//   //                CONEXIÃ“N SOCKET
 //   // ------------------------------------------------------
 //   useEffect(() => {
 //     socket = io("http://localhost:4000", {
@@ -3948,7 +3978,7 @@ export default function ChatPage() {
 //             selectedUser === null ? "bg-blue-100" : ""
 //           }`}
 //         >
-//           🌍 Chat Público
+//           ðŸŒ Chat PÃºblico
 //         </button>
 
 //         <ul className="divide-y">
@@ -3960,7 +3990,7 @@ export default function ChatPage() {
 //                 selectedUser === user ? "bg-blue-100" : ""
 //               }`}
 //             >
-//               👤 {user}
+//               ðŸ‘¤ {user}
 //             </li>
 //           ))}
 //         </ul>
@@ -3975,7 +4005,7 @@ export default function ChatPage() {
 //           <h1 className="text-lg font-semibold">
 //             {selectedUser
 //               ? `Chat privado con ${selectedUser}`
-//               : "Chat Público"}
+//               : "Chat PÃºblico"}
 //           </h1>
 //           <span className="text-sm opacity-80">ID: {USER_ID}</span>
 //         </div>
@@ -4007,7 +4037,7 @@ export default function ChatPage() {
 //                       download={msg.fileName}
 //                       className="text-blue-600 underline"
 //                     >
-//                       📎 Descargar {msg.fileName}
+//                       ðŸ“Ž Descargar {msg.fileName}
 //                     </a>
 //                   )}
 //                 </div>
@@ -4028,7 +4058,7 @@ export default function ChatPage() {
 //             onClick={() => fileInputRef.current.click()}
 //             className="p-2 bg-gray-200 rounded-full hover:bg-gray-300"
 //           >
-//             📎
+//             ðŸ“Ž
 //           </button>
 
 //           <input type="file" hidden ref={fileInputRef} onChange={sendFile} />
@@ -4091,7 +4121,7 @@ export default function ChatPage() {
 //   const bottomRef = useRef(null);
 
 //   // ------------------------------
-//   // CONEXIÓN SOCKET
+//   // CONEXIÃ“N SOCKET
 //   // ------------------------------
 //   useEffect(() => {
 //     socket = io("http://localhost:4000", {
@@ -4124,7 +4154,7 @@ export default function ChatPage() {
 //   }, [messages]);
 
 //   // ------------------------------
-//   // ENVÍO DE MENSAJES
+//   // ENVÃO DE MENSAJES
 //   // ------------------------------
 //   const sendText = () => {
 //     if (!text.trim()) return;
@@ -4136,7 +4166,7 @@ export default function ChatPage() {
 //         message: text,
 //       });
 //     } else {
-//       // PÚBLICO
+//       // PÃšBLICO
 //       socket.emit("send-message", text);
 //     }
 
@@ -4144,7 +4174,7 @@ export default function ChatPage() {
 //   };
 
 //   // ------------------------------
-//   // ENVÍO DE ARCHIVOS
+//   // ENVÃO DE ARCHIVOS
 //   // ------------------------------
 //   const sendFile = (e) => {
 //     const file = e.target.files[0];
@@ -4191,7 +4221,7 @@ export default function ChatPage() {
 //                 selectedUser === user ? "bg-blue-50" : ""
 //               }`}
 //             >
-//               <span className="font-medium">👤 {user}</span>
+//               <span className="font-medium">ðŸ‘¤ {user}</span>
 //             </li>
 //           ))}
 
@@ -4208,7 +4238,7 @@ export default function ChatPage() {
 //         {/* Header */}
 //         <div className="bg-blue-600 text-white px-4 py-3 shadow flex justify-between">
 //           <h1 className="text-lg font-semibold">
-//             {selectedUser ? `Chat privado con ${selectedUser}` : "Chat público"}
+//             {selectedUser ? `Chat privado con ${selectedUser}` : "Chat pÃºblico"}
 //           </h1>
 //           <span className="text-sm opacity-80">Tu ID: {USER_ID}</span>
 //         </div>
@@ -4261,7 +4291,7 @@ export default function ChatPage() {
 //             onClick={() => fileInputRef.current.click()}
 //             className="p-2 bg-gray-200 rounded-full hover:bg-gray-300"
 //           >
-//             📎
+//             ðŸ“Ž
 //           </button>
 
 //           <input ref={fileInputRef} type="file" hidden onChange={sendFile} />
@@ -4415,7 +4445,7 @@ export default function ChatPage() {
 //           onClick={() => fileInputRef.current.click()}
 //           className="p-2 bg-gray-200 rounded-full hover:bg-gray-300"
 //         >
-//           📎
+//           ðŸ“Ž
 //         </button>
 
 //         <input
@@ -4443,3 +4473,6 @@ export default function ChatPage() {
 //     </div>
 //   );
 // }
+
+
+

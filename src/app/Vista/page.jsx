@@ -484,6 +484,7 @@ export default function ChatPage() {
     const [audioDevices, setAudioDevices] = useState([]);
     const [selectedDeviceId, setSelectedDeviceId] = useState("");
     const [showMicSettings, setShowMicSettings] = useState(false);
+    const [uiToast, setUiToast] = useState("");
 
     // --- REFS ---
     const fileInputRef = useRef(null);
@@ -492,6 +493,18 @@ export default function ChatPage() {
     const mediaRecorderRef = useRef(null);
     const audioChunksRef = useRef([]);
     const recordTimeRef = useRef(0);
+    const toastTimerRef = useRef(null);
+
+    const showToast = useCallback((message) => {
+        const text = String(message || "").trim();
+        if (!text) return;
+        if (toastTimerRef.current) clearTimeout(toastTimerRef.current);
+        setUiToast(text);
+        toastTimerRef.current = setTimeout(() => {
+            setUiToast("");
+            toastTimerRef.current = null;
+        }, 3600);
+    }, []);
     
     // -------------------------------
     // Lógica de Conexión y Mensajes
@@ -540,12 +553,21 @@ export default function ChatPage() {
                     const defaultDevice = inputs.find(d => d.deviceId === 'default') || inputs[0];
                     setSelectedDeviceId(defaultDevice.deviceId);
                 }
-            } catch(e) { console.error("Error permisos micro:", e); }
+            } catch(e) {
+                console.error("Error permisos micro:", e);
+                showToast("No se pudo acceder al microfono");
+            }
         };
         getMicrophones();
 
-        return () => socketRef.current && socketRef.current.disconnect();
-    }, []);
+        return () => {
+            if (toastTimerRef.current) {
+                clearTimeout(toastTimerRef.current);
+                toastTimerRef.current = null;
+            }
+            socketRef.current && socketRef.current.disconnect();
+        };
+    }, [showToast]);
 
     // Scroll al final
     useEffect(() => {
@@ -725,7 +747,8 @@ export default function ChatPage() {
             setIsRecording(true);
         } catch (error) {
             console.error("Error al iniciar la grabación:", error);
-            alert("No se pudo acceder al micrófono.");
+            console.error("No se pudo acceder al micrófono.");
+            showToast("No se pudo iniciar la grabacion de audio");
         }
     };
 
@@ -841,8 +864,14 @@ export default function ChatPage() {
                     <div className="fixed inset-0 bg-black/50 z-40 md:hidden" onClick={() => setSidebarOpen(false)}></div>
                 )}
             </div>
+            {uiToast ? (
+                <div className="fixed top-4 right-4 z-[120] max-w-[320px] rounded-xl border border-red-400/35 bg-red-500/15 text-red-100 px-3 py-2.5 text-[12px] shadow-[0_14px_28px_rgba(0,0,0,0.28)] backdrop-blur">
+                    {uiToast}
+                </div>
+            ) : null}
         </div>
     );
 }
+
 
 

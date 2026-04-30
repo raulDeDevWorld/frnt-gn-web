@@ -4,9 +4,9 @@ import { RoomPostCard } from "@/components/RoomPostCard.jsx";
 
 function PostsSkeleton() {
   return (
-    <div className="max-w-2xl mx-auto space-y-3">
+    <div className="max-w-2xl mx-auto border-y border-white/10">
       {[0, 1, 2].map((id) => (
-        <div key={id} className="surface-card px-4 py-4 space-y-3">
+        <div key={id} className="px-1 py-4 sm:px-2 border-b border-white/10 last:border-b-0">
           <div className="flex items-center gap-3">
             <div className="w-8 h-8 rounded-full skeleton-line" />
             <div className="space-y-2">
@@ -59,7 +59,7 @@ export function PostsView({
       {isInitialLoading ? <PostsSkeleton /> : null}
 
       {isPostsView && filteredRoomPosts.length > 0 ? (
-        <div className="max-w-2xl mx-auto space-y-3 pb-24">
+        <div className="max-w-2xl mx-auto pb-24 border-y border-white/10 divide-y divide-white/10">
           {filteredRoomPosts.map((post) => (
             <RoomPostCard
               key={post._id}

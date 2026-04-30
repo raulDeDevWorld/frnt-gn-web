@@ -1244,10 +1244,10 @@ export default function ChatExperience() {
             type="button"
             onClick={handleOpenPostComposer}
             aria-label="Crear nuevo post"
-            className="absolute bottom-[calc(var(--bottom-nav-space)-0.65rem)] sm:bottom-[calc(var(--bottom-nav-space)-0.4rem)] right-4 sm:right-5 z-50 h-11 sm:h-12 px-4 rounded-full bg-[#00a884] hover:bg-[#008f72] active:scale-95 transition-all text-white shadow-xl inline-flex items-center gap-2"
+            className="absolute bottom-[calc(var(--bottom-nav-space)-0.65rem)] sm:bottom-[calc(var(--bottom-nav-space)-0.4rem)] left-1/2 -translate-x-1/2 z-50 h-11 sm:h-12 px-4 rounded-full bg-[#00a884] hover:bg-[#008f72] active:scale-95 transition-all text-white shadow-xl inline-flex items-center justify-center gap-2"
           >
             <Plus className="w-5 h-5" />
-            <span className="text-sm font-medium">Nuevo post</span>
+            <span className="text-sm font-medium leading-none">Nuevo post</span>
           </button>
         )}
 

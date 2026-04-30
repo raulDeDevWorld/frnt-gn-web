@@ -22,9 +22,9 @@ export function ChatSidebar({
   mobileView,
 }) {
   const sidebarClass = `
-        flex-col h-full border-r dark:border-gray-700 bg-white dark:bg-[#111b21] 
+        flex-col h-full border-r border-black/5 dark:border-gray-700 bg-white dark:bg-[#111b21]
         transition-all duration-300
-        md:flex md:w-[400px] md:min-w-[350px]
+        md:flex md:w-[360px] md:min-w-[320px]
         ${mobileView === "chat" ? "hidden" : "flex w-full"}
     `;
 
@@ -47,23 +47,23 @@ export function ChatSidebar({
         <div className="flex gap-2">
           <button
             onClick={onLogout}
-            className="px-2 py-1 text-[11px] rounded-md bg-white/80 dark:bg-[#2a3942] hover:bg-gray-200 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-200 border border-black/5 dark:border-white/10"
+            className="px-2 py-1 text-[11px] rounded-md bg-white/80 dark:bg-[#2a3942] hover:bg-gray-200 dark:hover:bg-gray-700 active:scale-95 transition-all text-gray-700 dark:text-gray-200 border border-black/5 dark:border-white/10"
           >
             Salir
           </button>
           <button
             onClick={() => setDarkMode(!darkMode)}
-            className="p-2 rounded-full hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors text-gray-500 dark:text-gray-300"
+            className="p-2 rounded-full hover:bg-gray-200 dark:hover:bg-gray-700 active:scale-95 transition-all text-gray-500 dark:text-gray-300"
           >
             {darkMode ? "Light" : "Dark"}
           </button>
         </div>
       </div>
 
-      <div className="flex-1 overflow-y-auto custom-scrollbar">
+      <div className="flex-1 overflow-y-auto custom-scrollbar pb-[calc(4.8rem+env(safe-area-inset-bottom))] md:pb-0">
         {activeSection === "posts" && (
           <>
-            <div className="px-4 py-3 text-[#008069] dark:text-[#00a884] text-xs font-bold uppercase tracking-wider">
+            <div className="sticky top-0 z-10 px-4 py-3 text-[#008069] dark:text-[#00a884] text-xs font-bold uppercase tracking-wider bg-white/95 dark:bg-[#111b21]/95 backdrop-blur">
               Feeds de Posts ({publicRooms.length})
             </div>
 
@@ -88,12 +88,12 @@ export function ChatSidebar({
                 <div
                   key={roomKey}
                   onClick={() => onSelectRoom(roomKey)}
-                  className={`px-4 py-3 flex items-center gap-3 cursor-pointer hover:bg-[#f5f6f6] dark:hover:bg-[#202c33] transition-colors border-b border-gray-100 dark:border-gray-800 ${selectedRoomKey === roomKey ? "bg-[#f0f2f5] dark:bg-[#2a3942]" : ""}`}
+                  className={`px-4 py-2.5 flex items-center gap-3 cursor-pointer hover:bg-[#f5f6f6] dark:hover:bg-[#202c33] active:scale-[0.995] transition-all border-b border-gray-100 dark:border-gray-800 ${selectedRoomKey === roomKey ? "bg-[#f0f2f5] dark:bg-[#2a3942]" : ""}`}
                 >
                   <div className="w-12 h-12 rounded-full bg-[#00a884] flex items-center justify-center text-white text-xl shadow-sm">R</div>
                   <div className="flex-1 min-w-0">
                     <div className="flex justify-between items-baseline mb-1">
-                      <span className="font-medium text-gray-900 dark:text-white text-[17px] truncate">
+                      <span className="font-medium text-gray-900 dark:text-white text-[15px] truncate">
                         {room.title || room.roomKey}
                       </span>
                       {timestamp && (
@@ -112,7 +112,7 @@ export function ChatSidebar({
 
         {activeSection === "chats" && (
           <>
-            <div className="px-4 py-3 text-[#008069] dark:text-[#00a884] text-xs font-bold uppercase tracking-wider">
+            <div className="sticky top-0 z-10 px-4 py-3 text-[#008069] dark:text-[#00a884] text-xs font-bold uppercase tracking-wider bg-white/95 dark:bg-[#111b21]/95 backdrop-blur">
               Chats Recientes ({directChatThreads.length})
             </div>
 
@@ -144,7 +144,7 @@ export function ChatSidebar({
                 <div
                   key={peerId}
                   onClick={() => onSelectUser(peerId)}
-                  className={`px-4 py-3 flex items-center gap-3 cursor-pointer hover:bg-[#f5f6f6] dark:hover:bg-[#202c33] transition-colors border-b border-gray-100 dark:border-gray-800 ${selectedUser === peerId ? "bg-[#f0f2f5] dark:bg-[#2a3942]" : ""}`}
+                  className={`px-4 py-2.5 flex items-center gap-3 cursor-pointer hover:bg-[#f5f6f6] dark:hover:bg-[#202c33] active:scale-[0.995] transition-all border-b border-gray-100 dark:border-gray-800 ${selectedUser === peerId ? "bg-[#f0f2f5] dark:bg-[#2a3942]" : ""}`}
                 >
                   <div className="w-12 h-12 rounded-full bg-gray-200 dark:bg-gray-600 flex items-center justify-center text-gray-600 dark:text-gray-200 text-xl relative">
                     U
@@ -154,7 +154,7 @@ export function ChatSidebar({
                   </div>
                   <div className="flex-1 min-w-0">
                     <div className="flex justify-between items-center mb-1">
-                      <span className="font-medium text-gray-900 dark:text-white text-[17px] truncate">{displayName}</span>
+                      <span className="font-medium text-gray-900 dark:text-white text-[15px] truncate">{displayName}</span>
                       {timestamp && (
                         <span className={`text-xs ${unseen ? "text-[#25d366] font-bold" : "text-gray-500 dark:text-gray-400"}`}>
                           {new Date(timestamp).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}

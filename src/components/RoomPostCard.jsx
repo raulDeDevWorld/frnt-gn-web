@@ -70,32 +70,39 @@ export function RoomPostCard({
   };
 
   return (
-    <article className="w-full px-0.5 py-2.5">
-      <div className="flex items-center justify-between gap-3">
-        <div className="flex items-center gap-2 min-w-0">
-          <div
+    <article className="w-full rounded-2xl border border-white/10 bg-[#0f171d] px-3.5 py-3 shadow-[0_8px_24px_rgba(0,0,0,0.2)] transition-all duration-200 hover:-translate-y-[1px] hover:shadow-[0_12px_26px_rgba(0,0,0,0.24)] sm:px-4">
+      <div className="flex items-start justify-between gap-3">
+        <div className="flex items-center gap-2.5 min-w-0">
+          <button
+            type="button"
             onClick={() => canStartDm && onStartDm?.(post.authorId)}
-            className={`w-6 h-6 rounded-full flex items-center justify-center text-[10px] font-semibold ${isMe ? "bg-[#00a884] text-white" : "bg-white/12 text-gray-200"} ${canStartDm ? "cursor-pointer" : ""}`}
+            className={`w-8 h-8 rounded-full flex items-center justify-center text-[11px] font-semibold shrink-0 transition-all active:scale-95 ${
+              isMe ? "bg-[#00a884] text-white" : "bg-white/12 text-gray-200"
+            } ${canStartDm ? "cursor-pointer" : ""}`}
           >
             {buildInitials(authorLabel)}
-          </div>
+          </button>
+
           <button
+            type="button"
             onClick={() => canStartDm && onStartDm?.(post.authorId)}
-            className="min-w-0 flex items-center gap-2 text-left hover:opacity-90 transition"
+            className="min-w-0 flex items-center gap-2 text-left hover:opacity-90 transition-all active:scale-[0.99]"
           >
-            <p className="text-[12px] font-semibold text-gray-100 truncate">{authorLabel}</p>
+            <p className="text-[13px] font-semibold text-gray-100 truncate">{authorLabel}</p>
             <span className="w-1 h-1 rounded-full bg-gray-500/90 shrink-0" />
-            <p className="text-[10px] text-gray-400 shrink-0">{formatTime(post.createdAt)}</p>
+            <p className="text-[11px] text-gray-400 shrink-0">{formatTime(post.createdAt)}</p>
           </button>
         </div>
+
         <div className="flex items-center gap-2 shrink-0">
           {canStartDm ? (
             <button
+              type="button"
               onClick={() => onStartDm?.(post.authorId)}
-              className="h-7 px-2 rounded-full border border-cyan-400/35 text-cyan-300 hover:bg-cyan-500/10 inline-flex items-center gap-1 text-[10px] font-medium"
+              className="h-8 px-2.5 rounded-full border border-cyan-400/35 text-cyan-300 hover:bg-cyan-500/10 active:scale-95 transition-all inline-flex items-center gap-1 text-[11px] font-medium"
               title="Escribir por chat"
             >
-              <MessageCircle className="w-3 h-3" />
+              <MessageCircle className="w-3.5 h-3.5" />
               Chat
             </button>
           ) : null}
@@ -108,13 +115,11 @@ export function RoomPostCard({
       </div>
 
       {post.content ? (
-        <p className="text-[13px] mt-1.5 leading-relaxed text-gray-100 whitespace-pre-wrap break-words">
-          {post.content}
-        </p>
+        <p className="text-[14px] mt-2.5 leading-relaxed text-gray-100 whitespace-pre-wrap break-words">{post.content}</p>
       ) : null}
 
       {firstMedia ? (
-        <div className="mt-2">
+        <div className="mt-2.5">
           {isImage ? (
             <img
               src={firstMedia.url}
@@ -126,16 +131,16 @@ export function RoomPostCard({
                   fileName: firstMedia.name || "image",
                 })
               }
-              className="w-full max-h-56 object-cover rounded-md cursor-pointer border border-white/15"
+              className="w-full max-h-64 object-cover rounded-xl cursor-pointer border border-white/15 transition-transform duration-300 hover:scale-[1.01]"
             />
           ) : null}
 
           {isVideo ? (
-            <div className="relative rounded-md overflow-hidden bg-black border border-white/15">
+            <div className="relative rounded-xl overflow-hidden bg-black border border-white/15">
               <video
                 src={firstMedia.url}
                 controls
-                className="w-full max-h-64 object-contain"
+                className="w-full max-h-72 object-contain"
                 onClick={() =>
                   onMediaClick?.({
                     mediaUrl: firstMedia.url,
@@ -150,19 +155,17 @@ export function RoomPostCard({
             </div>
           ) : null}
 
-          {isAudio ? <audio src={firstMedia.url} controls className="w-full h-8" /> : null}
+          {isAudio ? <audio src={firstMedia.url} controls className="w-full h-9" /> : null}
 
           {!isImage && !isVideo && !isAudio ? (
             <a
               href={firstMedia.url}
               download={firstMedia.name || "archivo"}
-              className="flex items-center gap-2 px-2.5 py-2 rounded-md border border-white/15 hover:bg-white/5"
+              className="flex items-center gap-2 px-2.5 py-2 rounded-xl border border-white/15 hover:bg-white/5 active:scale-[0.99] transition-all"
             >
               <Paperclip className="w-4 h-4 text-gray-300" />
               <div className="min-w-0">
-                <p className="text-[12px] font-medium text-gray-100 truncate">
-                  {firstMedia.name || "Archivo"}
-                </p>
+                <p className="text-[12px] font-medium text-gray-100 truncate">{firstMedia.name || "Archivo"}</p>
                 <p className="text-[10px] text-gray-400 uppercase truncate">
                   {firstMedia.mime || "application/octet-stream"}
                 </p>
@@ -172,28 +175,30 @@ export function RoomPostCard({
         </div>
       ) : null}
 
-      <div className="mt-1.5 flex items-center gap-3 text-[10px] text-gray-400">
+      <div className="mt-2.5 flex items-center gap-2.5 text-[11px] text-gray-400">
         <button
+          type="button"
           onClick={() => onToggleLike?.(post._id)}
-          className={`h-7 px-2 rounded-full border inline-flex items-center gap-1 transition ${
+          className={`h-8 px-2.5 rounded-full border inline-flex items-center gap-1 active:scale-95 transition-all ${
             post.likedByMe
               ? "border-rose-400/50 bg-rose-500/20 text-rose-300"
               : "border-white/15 hover:bg-white/5 text-gray-300"
           }`}
         >
-          <Heart className={`w-3 h-3 ${post.likedByMe ? "fill-current" : ""}`} />
+          <Heart className={`w-3.5 h-3.5 ${post.likedByMe ? "fill-current" : ""}`} />
           <span>{post.likesCount || 0}</span>
         </button>
 
         <button
+          type="button"
           onClick={handleToggleComments}
-          className={`h-7 px-2 rounded-full border inline-flex items-center gap-1 transition ${
+          className={`h-8 px-2.5 rounded-full border inline-flex items-center gap-1 active:scale-95 transition-all ${
             isCommentsOpen || hasActiveComments
               ? "border-cyan-400/40 text-cyan-300"
               : "border-white/15 hover:bg-white/5 text-gray-300"
           }`}
         >
-          <MessageCircle className="w-3 h-3" />
+          <MessageCircle className="w-3.5 h-3.5" />
           <span>{post.commentsCount || 0}</span>
         </button>
       </div>
@@ -229,12 +234,13 @@ export function RoomPostCard({
                 }
               }}
               placeholder="Escribe un comentario..."
-              className="flex-1 h-8 px-2.5 rounded-md border border-white/15 bg-[#111b21] text-[12px] text-gray-100 placeholder:text-gray-500 outline-none focus:border-[#00a884]"
+              className="flex-1 h-9 px-2.5 rounded-md border border-white/15 bg-[#111b21] text-[12px] text-gray-100 placeholder:text-gray-500 outline-none focus:border-[#00a884]"
             />
             <button
+              type="button"
               onClick={submitComment}
               disabled={!String(commentDraft || "").trim() || commentsSubmitting}
-              className="h-8 w-8 rounded-md bg-[#00a884] hover:bg-[#008f72] disabled:opacity-50 text-white inline-flex items-center justify-center"
+              className="h-9 w-9 rounded-md bg-[#00a884] hover:bg-[#008f72] active:scale-95 transition-all disabled:opacity-50 text-white inline-flex items-center justify-center"
             >
               <Send className="w-3.5 h-3.5" />
             </button>

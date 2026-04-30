@@ -78,35 +78,135 @@ function pathnameFromSection(section) {
   return "/posts";
 }
 
-function AppShellSkeleton() {
+function SkeletonSidebar() {
+  return (
+    <aside className="hidden md:flex md:w-[340px] border-r border-[color:var(--border-soft)] bg-[color:var(--surface-1)]">
+      <div className="w-full p-4 space-y-4">
+        <div className="h-10 w-full skeleton-line" />
+        {[0, 1, 2, 3, 4, 5].map((id) => (
+          <div key={id} className="h-14 w-full skeleton-line" />
+        ))}
+      </div>
+    </aside>
+  );
+}
+
+function SkeletonBottomNav() {
+  return (
+    <nav className="fixed inset-x-0 bottom-0 z-40 h-[var(--bottom-nav-space)] border-t border-[color:var(--border-soft)] bg-[color:var(--surface-1)]/95 backdrop-blur px-2 pt-1.5 pb-[env(safe-area-inset-bottom)]">
+      <div className="mx-auto w-full max-w-md grid grid-cols-3 gap-1.5">
+        {[0, 1, 2].map((id) => (
+          <div key={id} className="h-12 rounded-2xl skeleton-line" />
+        ))}
+      </div>
+    </nav>
+  );
+}
+
+function SkeletonTopHeader({ showPostControls = false, showPostSearch = false }) {
+  return (
+    <div className="shadow-sm z-10 border-b bg-[color:var(--surface-1)] border-[color:var(--border-soft)] px-3 sm:px-4 py-2.5">
+      <div className="flex items-center justify-between gap-3">
+        <div className="flex items-center gap-3">
+          <div className="w-10 h-10 rounded-full skeleton-line" />
+          <div className="space-y-2">
+            <div className="h-3 w-24 skeleton-line" />
+            <div className="h-2.5 w-36 skeleton-line" />
+          </div>
+        </div>
+
+        {showPostControls ? (
+          <div className="flex items-center gap-2">
+            <div className="h-8 w-[86px] rounded-md skeleton-line" />
+            <div className="h-8 w-8 rounded-md skeleton-line" />
+          </div>
+        ) : null}
+      </div>
+
+      {showPostSearch ? (
+        <div className="mt-2">
+          <div className="h-9 w-full rounded-md skeleton-line" />
+        </div>
+      ) : null}
+    </div>
+  );
+}
+
+function PostsSectionSkeleton() {
+  return (
+    <div className="flex-1 overflow-y-auto p-3 sm:px-4 md:px-6 pb-[calc(var(--bottom-nav-space)+0.2rem)] bg-[color:var(--surface-1)]">
+      <div className="max-w-2xl mx-auto space-y-3">
+        {[0, 1, 2].map((id) => (
+          <div key={id} className="surface-card px-4 py-4 space-y-3">
+            <div className="flex items-center gap-3">
+              <div className="w-8 h-8 rounded-full skeleton-line" />
+              <div className="space-y-2">
+                <div className="h-2.5 w-28 skeleton-line" />
+                <div className="h-2 w-16 skeleton-line" />
+              </div>
+            </div>
+            <div className="h-2.5 w-[92%] skeleton-line" />
+            <div className="h-2.5 w-[74%] skeleton-line" />
+            <div className="h-40 rounded-xl skeleton-line" />
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+function ChatsSectionSkeleton() {
+  return (
+    <div className="flex-1 overflow-y-auto px-2 py-3 sm:px-8 md:px-12 pb-[var(--bottom-nav-space)] bg-[color:var(--surface-1)]">
+      <div className="max-w-xl mx-auto space-y-2 pt-2">
+        {[0, 1, 2, 3, 4].map((id) => (
+          <div key={id} className={`flex ${id % 2 === 0 ? "justify-start" : "justify-end"}`}>
+            <div className="max-w-[78%] surface-card px-3 py-2.5 space-y-2">
+              <div className="h-2.5 w-40 skeleton-line" />
+              <div className="h-2.5 w-28 skeleton-line" />
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+function ConfigSectionSkeleton() {
+  return (
+    <div className="flex-1 overflow-y-auto p-3 sm:px-4 md:px-6 pb-[var(--bottom-nav-space)] bg-[color:var(--surface-1)]">
+      <div className="max-w-2xl mx-auto surface-card p-5 space-y-4">
+        <div className="h-5 w-24 skeleton-line" />
+        <div className="h-3 w-52 skeleton-line" />
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+          <div className="sm:col-span-2 h-10 rounded-md skeleton-line" />
+          <div className="h-10 rounded-md skeleton-line" />
+          <div className="h-10 rounded-md skeleton-line" />
+          <div className="sm:col-span-2 flex gap-2">
+            <div className="h-10 w-36 rounded-md skeleton-line" />
+            <div className="h-10 w-32 rounded-md skeleton-line" />
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function AppShellSkeleton({ section = "posts" }) {
+  const isChats = section === "chats";
+  const isConfig = section === "config";
+
   return (
     <div className="min-h-screen bg-[color:var(--app-bg)]">
       <div className="flex h-screen overflow-hidden">
-        <aside className="hidden md:flex md:w-[340px] border-r border-[color:var(--border-soft)] bg-[color:var(--surface-1)]">
-          <div className="w-full p-4 space-y-4">
-            <div className="h-10 w-full skeleton-line" />
-            {[0, 1, 2, 3, 4].map((id) => (
-              <div key={id} className="h-14 w-full skeleton-line" />
-            ))}
-          </div>
-        </aside>
+        {isChats ? <SkeletonSidebar /> : null}
 
-        <main className="flex-1 min-w-0 flex flex-col bg-[color:var(--surface-1)]">
-          <div className="h-[60px] border-b border-[color:var(--border-soft)] px-4 flex items-center">
-            <div className="h-8 w-40 skeleton-line" />
-          </div>
-          <div className="flex-1 p-3 sm:p-4 space-y-3 pb-[var(--bottom-nav-space)]">
-            {[0, 1, 2].map((id) => (
-              <div key={id} className="surface-card p-4 space-y-3">
-                <div className="h-3 w-28 skeleton-line" />
-                <div className="h-2.5 w-[90%] skeleton-line" />
-                <div className="h-2.5 w-[70%] skeleton-line" />
-                <div className="h-28 w-full rounded-xl skeleton-line" />
-              </div>
-            ))}
-          </div>
+        <main className="flex-1 min-w-0 flex flex-col bg-[color:var(--app-bg)] relative">
+          <SkeletonTopHeader showPostControls={!isChats && !isConfig} showPostSearch={!isChats && !isConfig} />
+          {isChats ? <ChatsSectionSkeleton /> : isConfig ? <ConfigSectionSkeleton /> : <PostsSectionSkeleton />}
         </main>
       </div>
+      <SkeletonBottomNav />
     </div>
   );
 }
@@ -128,6 +228,7 @@ export default function ChatExperience() {
   const [mobileView, setMobileView] = useState(routeSection === "chats" ? "list" : "chat");
   const [darkMode, setDarkMode] = useState(false);
   const [mediaViewerData, setMediaViewerData] = useState(null);
+  const [contentVisible, setContentVisible] = useState(false);
 
   const socketRef = useRef(null);
   const bottomRef = useRef(null);
@@ -151,6 +252,21 @@ export default function ChatExperience() {
     authStorageKey: AUTH_STORAGE_KEY,
   });
   const userId = authUser?.userId || "";
+
+  useEffect(() => {
+    if (!isClient || authLoading) {
+      setContentVisible(false);
+      return;
+    }
+
+    const rafId = window.requestAnimationFrame(() => {
+      setContentVisible(true);
+    });
+
+    return () => {
+      window.cancelAnimationFrame(rafId);
+    };
+  }, [authLoading, isClient, routeSection, authToken, authUser?.userId, authUser?.profileCompleted]);
 
   useEffect(() => {
     const next = sectionFromPathname(pathname);
@@ -580,12 +696,16 @@ export default function ChatExperience() {
   };
 
   if (!isClient || authLoading) {
-    return <AppShellSkeleton />;
+    return <AppShellSkeleton section={routeSection} />;
   }
 
   if (!authToken || !authUser) {
     return (
-      <div className="min-h-screen bg-[color:var(--app-bg)] flex items-center justify-center p-6">
+      <div
+        className={`min-h-screen bg-[color:var(--app-bg)] flex items-center justify-center p-6 transition-opacity duration-150 md:duration-200 ${
+          contentVisible ? "opacity-100" : "opacity-0"
+        }`}
+      >
         <div className="w-full max-w-md surface-card p-8">
           <h1 className="text-2xl font-semibold text-gray-100 mb-2">Iniciar sesion</h1>
           <p className="text-sm text-[color:var(--text-soft)] mb-6">
@@ -600,7 +720,11 @@ export default function ChatExperience() {
 
   if (!authUser.profileCompleted) {
     return (
-      <div className="min-h-screen bg-[#f0f2f5] dark:bg-[#111b21] flex items-center justify-center p-6">
+      <div
+        className={`min-h-screen bg-[#f0f2f5] dark:bg-[#111b21] flex items-center justify-center p-6 transition-opacity duration-150 md:duration-200 ${
+          contentVisible ? "opacity-100" : "opacity-0"
+        }`}
+      >
         <form
           onSubmit={handleSubmitProfile}
           className="w-full max-w-lg bg-white dark:bg-[#202c33] rounded-2xl border border-black/5 dark:border-white/10 shadow-lg p-8"
@@ -733,7 +857,7 @@ export default function ChatExperience() {
 
   return (
     <div
-      className={`flex h-screen overflow-hidden ${darkMode ? "dark bg-[color:var(--app-bg)]" : "bg-[color:var(--app-bg)]"}`}
+      className={`flex h-screen overflow-hidden transition-opacity duration-150 md:duration-200 ${contentVisible ? "opacity-100" : "opacity-0"} ${darkMode ? "dark bg-[color:var(--app-bg)]" : "bg-[color:var(--app-bg)]"}`}
     >
       {showSidebar && (
         <ChatSidebar

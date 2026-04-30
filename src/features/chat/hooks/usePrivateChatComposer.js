@@ -60,6 +60,25 @@ export function usePrivateChatComposer({
     setAudioDuration(5);
   }, [isRecording]);
 
+  const cancelRec = useCallback(() => {
+    if (mediaRecorderRef.current && isRecording) {
+      const recorder = mediaRecorderRef.current;
+      const stream = recorder.stream;
+      recorder.onstop = () => {
+        stream?.getTracks?.().forEach((track) => track.stop());
+      };
+      recorder.stop();
+    }
+    setIsRecording(false);
+    setAudioFile(null);
+    setAudioDuration(0);
+  }, [isRecording]);
+
+  const clearAudio = useCallback(() => {
+    setAudioFile(null);
+    setAudioDuration(0);
+  }, []);
+
   const sendAudio = useCallback(async () => {
     if (!audioFile) return;
     try {
@@ -76,11 +95,11 @@ export function usePrivateChatComposer({
         fileSize: uploaded.fileSize || audioFile.blob?.size || 0,
         duration: audioDuration,
       });
-      setAudioFile(null);
+      clearAudio();
     } catch (error) {
       alert(error?.message || "No se pudo subir el audio");
     }
-  }, [audioDuration, audioFile, sendMessage, uploadFileAndGetUrl]);
+  }, [audioDuration, audioFile, clearAudio, sendMessage, uploadFileAndGetUrl]);
 
   const handleFileSelect = useCallback(
     async (event) => {
@@ -141,6 +160,8 @@ export function usePrivateChatComposer({
     handleSendText,
     startRec,
     stopRec,
+    cancelRec,
+    clearAudio,
     sendAudio,
     handleFileSelect,
     resetPrivateComposer,

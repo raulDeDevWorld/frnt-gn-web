@@ -233,10 +233,6 @@ export default function ChatExperience() {
     socketRef.current.emit("room:join", { roomKey });
   }, []);
 
-  useEffect(() => {
-    setIsClient(true);
-  }, []);
-
   useChatSocket({
     socketRef,
     backendUrl: BACKEND_URL,
@@ -417,6 +413,8 @@ export default function ChatExperience() {
     handleSendText,
     startRec,
     stopRec,
+    cancelRec,
+    clearAudio,
     sendAudio,
     handleFileSelect,
     resetPrivateComposer,
@@ -1076,11 +1074,7 @@ export default function ChatExperience() {
                 <Mic className="text-red-500 animate-bounce w-5 h-5" />
                 <span className="flex-1 text-gray-500 dark:text-gray-300 font-mono">Grabando audio...</span>
                 <button
-                  onClick={() => {
-                    stopRec();
-                    setIsRecording(false);
-                    setAudioFile(null);
-                  }}
+                  onClick={cancelRec}
                   className="text-red-500 text-sm font-medium hover:underline"
                 >
                   Cancelar
@@ -1094,7 +1088,7 @@ export default function ChatExperience() {
             {audioFile && (
               <div className="flex-1 bg-white dark:bg-[#2a3942] rounded-lg flex items-center p-2 gap-3 shadow-sm">
                 <button
-                  onClick={() => setAudioFile(null)}
+                  onClick={clearAudio}
                   className="p-2 text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 active:scale-95 transition-all rounded-full"
                 >
                   <Trash2 className="w-5 h-5" />

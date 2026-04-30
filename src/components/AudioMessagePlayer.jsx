@@ -36,7 +36,7 @@ export const AudioMessagePlayer = ({ audioURL, duration, isMe }) => {
 
     return (
         <div className="flex items-center gap-2 min-w-[200px]">
-            <button onClick={togglePlay} className="text-gray-500 dark:text-gray-300">
+            <button type="button" onClick={togglePlay} className="text-gray-500 dark:text-gray-300" aria-label={isPlaying ? "Pausar audio" : "Reproducir audio"}>
                 {isPlaying ? <Pause className="w-5 h-5" /> : <Play className="w-5 h-5" />}
             </button>
             <div className="flex-1 flex flex-col">

@@ -10,6 +10,7 @@ export function usePrivateChatComposer({
   uploadFileAndGetUrl,
   clientUploadMaxBytes,
   clientImageTargetBytes,
+  onNotify,
 }) {
   const [text, setText] = useState("");
   const [showEmoji, setShowEmoji] = useState(false);
@@ -49,9 +50,13 @@ export function usePrivateChatComposer({
       mediaRecorderRef.current.start();
       setIsRecording(true);
     } catch {
-      alert("Error Microfono");
+      if (typeof onNotify === "function") {
+        onNotify({ type: "error", message: "No se pudo acceder al microfono" });
+      } else {
+        console.error("No se pudo acceder al microfono");
+      }
     }
-  }, []);
+  }, [onNotify]);
 
   const stopRec = useCallback(() => {
     if (!isRecording || !mediaRecorderRef.current) return;
@@ -97,9 +102,14 @@ export function usePrivateChatComposer({
       });
       clearAudio();
     } catch (error) {
-      alert(error?.message || "No se pudo subir el audio");
+      const message = error?.message || "No se pudo subir el audio";
+      if (typeof onNotify === "function") {
+        onNotify({ type: "error", message });
+      } else {
+        console.error(message);
+      }
     }
-  }, [audioDuration, audioFile, clearAudio, sendMessage, uploadFileAndGetUrl]);
+  }, [audioDuration, audioFile, clearAudio, onNotify, sendMessage, uploadFileAndGetUrl]);
 
   const handleFileSelect = useCallback(
     async (event) => {
@@ -141,12 +151,17 @@ export function usePrivateChatComposer({
           fileSize: uploaded.fileSize || prepared.fileSize || file.size,
         });
       } catch (error) {
-        alert(error?.message || "No se pudo subir el archivo");
+        const message = error?.message || "No se pudo subir el archivo";
+        if (typeof onNotify === "function") {
+          onNotify({ type: "error", message });
+        } else {
+          console.error(message);
+        }
       } finally {
         event.target.value = "";
       }
     },
-    [clientImageTargetBytes, clientUploadMaxBytes, sendMessage, uploadFileAndGetUrl]
+    [clientImageTargetBytes, clientUploadMaxBytes, onNotify, sendMessage, uploadFileAndGetUrl]
   );
 
   return {

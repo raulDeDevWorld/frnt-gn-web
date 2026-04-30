@@ -16,6 +16,7 @@ export function usePostsFeed({
   defaultRoomKey,
   roomPostPageSize,
   setPublicRooms,
+  onNotify,
 }) {
   const [roomPosts, setRoomPosts] = useState({});
   const [roomPostPaging, setRoomPostPaging] = useState({});
@@ -130,10 +131,15 @@ export function usePostsFeed({
         if (rollback) {
           patchPostById(id, () => rollback);
         }
-        alert(error?.message || "No se pudo actualizar like");
+        const message = error?.message || "No se pudo actualizar like";
+        if (typeof onNotify === "function") {
+          onNotify({ type: "error", message });
+        } else {
+          console.error(message);
+        }
       }
     },
-    [authToken, backendUrl, defaultRoomKey, patchPostById, selectedRoomKey]
+    [authToken, backendUrl, defaultRoomKey, onNotify, patchPostById, selectedRoomKey]
   );
 
   const handleLoadPostComments = useCallback(

@@ -3,14 +3,14 @@
 import { MessageCircle, Newspaper, Settings2 } from "lucide-react";
 
 const NAV_ITEMS = [
-  { key: "posts", label: "Posts", icon: Newspaper },
+  { key: "posts", label: "Feed", icon: Newspaper },
   { key: "chats", label: "Chats", icon: MessageCircle },
-  { key: "config", label: "Config", icon: Settings2 },
+  { key: "config", label: "Ajustes", icon: Settings2 },
 ];
 
 export function AppBottomNav({ activeSection, onSectionChange }) {
   return (
-    <nav className="fixed inset-x-0 bottom-0 z-40 h-[var(--bottom-nav-space)] border-t border-[color:var(--border-soft)] bg-[color:var(--surface-1)]/95 backdrop-blur px-2 pt-1.5 pb-[env(safe-area-inset-bottom)]">
+    <nav className="fixed inset-x-0 bottom-0 z-40 h-[var(--bottom-nav-space)] border-t border-[color:var(--border-soft)] bg-[color:var(--surface-1)]/95 backdrop-blur px-2 pt-1.5 pb-[env(safe-area-inset-bottom)] md:hidden">
       <div className="mx-auto w-full max-w-md grid grid-cols-3 gap-1.5">
         {NAV_ITEMS.map((item) => {
           const Icon = item.icon;
@@ -19,6 +19,7 @@ export function AppBottomNav({ activeSection, onSectionChange }) {
             <button
               key={item.key}
               onClick={() => onSectionChange(item.key)}
+              aria-label={`Ir a ${item.label}`}
               className={`h-12 rounded-2xl border border-transparent relative transition-all duration-200 active:scale-95 inline-flex flex-col items-center justify-center gap-0.5 ${
                 isActive
                   ? "bg-[#16372f] text-[#6cf1cd] shadow-[inset_0_0_0_1px_rgba(108,241,205,0.15)]"

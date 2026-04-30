@@ -6,6 +6,9 @@ export function ConfigView({
   profileForm,
   profileError,
   profileSaving,
+  countriesLoading,
+  countriesError,
+  countryOptions,
   onProfileChange,
   onSubmitProfile,
   onLogout,
@@ -56,6 +59,36 @@ export function ConfigView({
                 className="h-10 px-3 rounded-lg border border-white/10 bg-[#0f171e] text-gray-100 outline-none focus:border-cyan-400/55"
               />
             </label>
+            <label className="flex flex-col gap-1">
+              <span className="text-xs text-[color:var(--text-soft)]">Genero</span>
+              <select
+                value={profileForm.gender}
+                onChange={(e) => onProfileChange("gender", e.target.value)}
+                className="h-10 px-3 rounded-lg border border-white/10 bg-[#0f171e] text-gray-100 outline-none focus:border-cyan-400/55"
+              >
+                <option value="">Selecciona</option>
+                <option value="masculino">Masculino</option>
+                <option value="femenino">Femenino</option>
+              </select>
+            </label>
+            <label className="flex flex-col gap-1">
+              <span className="text-xs text-[color:var(--text-soft)]">Fecha de nacimiento</span>
+              <input
+                type="date"
+                value={profileForm.birthDate}
+                onChange={(e) => onProfileChange("birthDate", e.target.value)}
+                className="h-10 px-3 rounded-lg border border-white/10 bg-[#0f171e] text-gray-100 outline-none focus:border-cyan-400/55"
+              />
+            </label>
+            <label className="flex flex-col gap-1 sm:col-span-2">
+              <span className="text-xs text-[color:var(--text-soft)]">Celular</span>
+              <input
+                value={profileForm.phoneNumber}
+                onChange={(e) => onProfileChange("phoneNumber", e.target.value)}
+                placeholder="+59171234567"
+                className="h-10 px-3 rounded-lg border border-white/10 bg-[#0f171e] text-gray-100 outline-none focus:border-cyan-400/55"
+              />
+            </label>
           </div>
         </div>
 
@@ -77,7 +110,27 @@ export function ConfigView({
                 <option value="pt">Portugues</option>
               </select>
             </label>
+            <label className="flex flex-col gap-1 sm:max-w-[280px]">
+              <span className="text-xs text-[color:var(--text-soft)]">Pais</span>
+              <select
+                value={profileForm.country}
+                onChange={(e) => onProfileChange("country", e.target.value.toUpperCase())}
+                className="h-10 px-3 rounded-lg border border-white/10 bg-[#0f171e] text-gray-100 outline-none focus:border-emerald-400/55"
+              >
+                <option value="">{countriesLoading ? "Cargando paises..." : "Selecciona un pais"}</option>
+                {(countryOptions || []).map((country) => (
+                  <option key={country.code} value={country.code}>
+                    {`${country.flag ? `${country.flag} ` : ""}${country.name} (${country.code})`}
+                  </option>
+                ))}
+              </select>
+            </label>
           </div>
+          {countriesError ? (
+            <p className="mt-2 text-[11px] text-amber-300">
+              No se pudo sincronizar paises remotos. Se usa lista local.
+            </p>
+          ) : null}
         </div>
 
         {profileError ? (

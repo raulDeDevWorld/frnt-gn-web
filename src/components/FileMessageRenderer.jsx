@@ -6,10 +6,16 @@ export const FileMessageRenderer = ({ msg, isMe, onMediaClick }) => {
     const fileUrl = msg.mediaUrl;
     const isImage = msg.type === "image";
     const isVideo = msg.type === "video";
+    const fileTypeLabel = String(msg.fileType || "").split("/")[1] || "archivo";
     
     if (isImage || isVideo) {
         return (
-            <div className="cursor-pointer mt-1 mb-1 relative group" onClick={() => onMediaClick(msg)}>
+            <button
+                type="button"
+                className="cursor-pointer mt-1 mb-1 relative group block text-left"
+                onClick={() => onMediaClick(msg)}
+                aria-label={isImage ? "Abrir imagen" : "Abrir video"}
+            >
                 {isImage && <img src={fileUrl} alt="file" className="max-h-64 rounded-lg object-cover border border-gray-200 dark:border-transparent" />}
                 {isVideo && (
                     <div className="relative">
@@ -19,7 +25,7 @@ export const FileMessageRenderer = ({ msg, isMe, onMediaClick }) => {
                         </div>
                     </div>
                 )}
-            </div>
+            </button>
         );
     }
     return (
@@ -29,7 +35,7 @@ export const FileMessageRenderer = ({ msg, isMe, onMediaClick }) => {
                 <a href={fileUrl} download={msg.fileName} className="text-sm font-medium truncate max-w-[150px] hover:underline">
                     {msg.fileName}
                 </a>
-                <span className="text-[10px] text-gray-500 dark:text-gray-400 uppercase">{msg.fileType.split('/')[1]}</span>
+                <span className="text-[10px] text-gray-500 dark:text-gray-400 uppercase">{fileTypeLabel}</span>
             </div>
         </div>
     );

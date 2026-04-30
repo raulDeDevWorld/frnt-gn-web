@@ -15,6 +15,7 @@ export function usePostComposer({
   clientImageTargetBytes,
   uploadFileAndGetUrl,
   appendIncomingPost,
+  onNotify,
 }) {
   const [isPostComposerOpen, setIsPostComposerOpen] = useState(false);
   const [postDraft, setPostDraft] = useState("");
@@ -65,13 +66,18 @@ export function usePostComposer({
           size: prepared.fileSize || 0,
         });
       } catch (error) {
-        alert(error?.message || "No se pudo preparar la imagen");
+        const message = error?.message || "No se pudo preparar la imagen";
+        if (typeof onNotify === "function") {
+          onNotify({ type: "error", message });
+        } else {
+          console.error(message);
+        }
         setPostAttachment(null);
       } finally {
         event.target.value = "";
       }
     },
-    [clientImageTargetBytes, clientUploadMaxBytes]
+    [clientImageTargetBytes, clientUploadMaxBytes, onNotify]
   );
 
   const removePostAttachment = useCallback(() => {
@@ -101,7 +107,12 @@ export function usePostComposer({
     const content = String(postDraft || "").trim();
     if (!content && !postAttachment?.file) return;
     if (postAttachment?.size && Number(postAttachment.size) > clientUploadMaxBytes) {
-      alert(`Archivo supera el limite de ${formatFileSize(clientUploadMaxBytes)}`);
+      const message = `Archivo supera el limite de ${formatFileSize(clientUploadMaxBytes)}`;
+      if (typeof onNotify === "function") {
+        onNotify({ type: "error", message });
+      } else {
+        console.error(message);
+      }
       return;
     }
 
@@ -153,7 +164,12 @@ export function usePostComposer({
       setPostAttachment(null);
       setIsPostComposerOpen(false);
     } catch (error) {
-      alert(error?.message || "No se pudo publicar");
+      const message = error?.message || "No se pudo publicar";
+      if (typeof onNotify === "function") {
+        onNotify({ type: "error", message });
+      } else {
+        console.error(message);
+      }
     } finally {
       setPostPublishing(false);
     }
@@ -167,6 +183,7 @@ export function usePostComposer({
     selectedRoomKey,
     selectedUser,
     socketRef,
+    onNotify,
     uploadFileAndGetUrl,
   ]);
 

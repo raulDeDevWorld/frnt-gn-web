@@ -18,6 +18,7 @@ import {
   ShieldCheck,
   Zap,
   Globe2,
+  X,
 } from "lucide-react";
 import { AppBottomNav } from "@/components/AppBottomNav.jsx";
 import { MediaViewer } from "@/components/MediaViewer.jsx";
@@ -25,6 +26,7 @@ import { ChatSidebar } from "@/components/ChatSidebar.jsx";
 import { ChatsView } from "@/components/views/ChatsView.jsx";
 import { ConfigView } from "@/components/views/ConfigView.jsx";
 import { PostsView } from "@/components/views/PostsView.jsx";
+import { ToastViewport } from "@/components/ToastViewport.jsx";
 import { useAuthSession } from "@/features/auth/hooks/useAuthSession.js";
 import { useProfileSettings } from "@/features/profile/hooks/useProfileSettings.js";
 import { usePostsFeed } from "@/features/posts/hooks/usePostsFeed.js";
@@ -232,12 +234,21 @@ export default function ChatExperience() {
   const [darkMode, setDarkMode] = useState(false);
   const [mediaViewerData, setMediaViewerData] = useState(null);
   const [contentVisible, setContentVisible] = useState(false);
+  const [toasts, setToasts] = useState([]);
+  const [isCreateRoomModalOpen, setIsCreateRoomModalOpen] = useState(false);
+  const [newRoomName, setNewRoomName] = useState("");
+  const [isCreatingRoom, setIsCreatingRoom] = useState(false);
 
   const socketRef = useRef(null);
   const bottomRef = useRef(null);
   const messageListRef = useRef(null);
   const fileInputRef = useRef(null);
   const postComposerFileInputRef = useRef(null);
+  const postComposerDialogRef = useRef(null);
+  const postComposerTextareaRef = useRef(null);
+  const createRoomDialogRef = useRef(null);
+  const createRoomInputRef = useRef(null);
+  const toastTimersRef = useRef(new Map());
   const {
     isClient,
     authToken,
@@ -255,6 +266,40 @@ export default function ChatExperience() {
     authStorageKey: AUTH_STORAGE_KEY,
   });
   const userId = authUser?.userId || "";
+
+  const dismissToast = useCallback((toastId) => {
+    const id = String(toastId || "");
+    if (!id) return;
+    const timer = toastTimersRef.current.get(id);
+    if (timer) {
+      window.clearTimeout(timer);
+      toastTimersRef.current.delete(id);
+    }
+    setToasts((prev) => prev.filter((toast) => toast.id !== id));
+  }, []);
+
+  const pushToast = useCallback(
+    ({ type = "info", message }) => {
+      const normalized = String(message || "").trim();
+      if (!normalized) return;
+      const id = `${Date.now()}_${Math.random().toString(16).slice(2, 8)}`;
+      setToasts((prev) => [...prev, { id, type, message: normalized }]);
+      const timer = window.setTimeout(() => {
+        dismissToast(id);
+      }, 4200);
+      toastTimersRef.current.set(id, timer);
+    },
+    [dismissToast]
+  );
+
+  useEffect(() => {
+    return () => {
+      for (const timer of toastTimersRef.current.values()) {
+        window.clearTimeout(timer);
+      }
+      toastTimersRef.current.clear();
+    };
+  }, []);
 
   useEffect(() => {
     if (!isClient || authLoading) {
@@ -322,6 +367,7 @@ export default function ChatExperience() {
     defaultRoomKey: DEFAULT_ROOM_KEY,
     roomPostPageSize: ROOM_POST_PAGE_SIZE,
     setPublicRooms,
+    onNotify: pushToast,
   });
 
   const {
@@ -350,6 +396,11 @@ export default function ChatExperience() {
   });
 
   const clearAuth = useCallback(() => {
+    for (const timer of toastTimersRef.current.values()) {
+      window.clearTimeout(timer);
+    }
+    toastTimersRef.current.clear();
+    setToasts([]);
     clearAuthCore();
     setPublicRooms([]);
     resetPostsState();
@@ -413,6 +464,19 @@ export default function ChatExperience() {
     () => publicRooms.find((room) => room.roomKey === selectedRoomKey) || null,
     [publicRooms, selectedRoomKey]
   );
+  const selectedThread = useMemo(() => {
+    if (!selectedUser) return null;
+    const peerId = String(selectedUser || "").trim();
+    if (!peerId) return null;
+    return directChatThreads.find((thread) => String(thread?.peerUserId || "").trim() === peerId) || null;
+  }, [directChatThreads, selectedUser]);
+  const selectedPeerDisplayName = useMemo(() => {
+    const fromThread = String(selectedThread?.peerDisplayName || "").trim();
+    if (fromThread) return fromThread;
+    return String(selectedUser || "").trim();
+  }, [selectedThread?.peerDisplayName, selectedUser]);
+  const selectedPeerOnline = Boolean(selectedUser && activeUsers.includes(String(selectedUser)));
+
   const selectedRoomPaging = roomPostPaging[selectedRoomKey] || {};
   const isPostsView = activeSection === "posts";
   const isChatsView = activeSection === "chats";
@@ -420,14 +484,16 @@ export default function ChatExperience() {
   const showPrivateChat = isChatsView && Boolean(selectedUser);
   const showSidebar = isChatsView;
   const sectionHeaderTitle = showPrivateChat
-    ? selectedUser
+    ? selectedPeerDisplayName
     : isChatsView
       ? "Chats"
       : isConfigView
         ? "Configuracion"
         : "Posts";
   const sectionHeaderSubtitle = showPrivateChat
-    ? "en linea"
+    ? selectedPeerOnline
+      ? "en linea"
+      : "sin conexion"
     : isChatsView
       ? "Selecciona una conversacion"
       : isConfigView
@@ -545,7 +611,7 @@ export default function ChatExperience() {
       },
       (response) => {
         if (!response?.ok) {
-          alert("No se pudo publicar");
+          pushToast({ type: "error", message: "No se pudo publicar" });
           return;
         }
         if (response.post) {
@@ -553,7 +619,7 @@ export default function ChatExperience() {
         }
       }
     );
-  }, [appendIncomingPost, selectedRoomKey, selectedUser, socketRef, upsertDirectThread, userId]);
+  }, [appendIncomingPost, pushToast, selectedRoomKey, selectedUser, socketRef, upsertDirectThread, userId]);
 
   const {
     text,
@@ -576,6 +642,7 @@ export default function ChatExperience() {
     uploadFileAndGetUrl,
     clientUploadMaxBytes: CLIENT_UPLOAD_MAX_BYTES,
     clientImageTargetBytes: CLIENT_IMAGE_TARGET_BYTES,
+    onNotify: pushToast,
   });
 
   const {
@@ -600,6 +667,7 @@ export default function ChatExperience() {
     clientImageTargetBytes: CLIENT_IMAGE_TARGET_BYTES,
     uploadFileAndGetUrl,
     appendIncomingPost,
+    onNotify: pushToast,
   });
 
   const handleOpenPostComposer = useCallback(() => {
@@ -679,24 +747,90 @@ export default function ChatExperience() {
     clearAuth();
   }, [clearAuth]);
 
-  const handleCreateRoom = () => {
-    if (!socketRef.current) return;
-    const input = window.prompt("Nombre de la nueva sala publica:");
-    if (!input) return;
+  const openCreateRoomModal = useCallback(() => {
+    setNewRoomName("");
+    setIsCreateRoomModalOpen(true);
+  }, []);
 
-    socketRef.current.emit(
-      "room:create",
-      { roomKey: input, title: input, description: "" },
-      (response) => {
-        if (!response?.ok || !response?.room?.roomKey) {
-          alert("No se pudo crear la sala");
-          return;
-        }
-        setPublicRooms((prev) => mergeRooms(prev, [response.room]));
-        handleSelectRoom(response.room.roomKey);
+  const closeCreateRoomModal = useCallback(() => {
+    if (isCreatingRoom) return;
+    setIsCreateRoomModalOpen(false);
+    setNewRoomName("");
+  }, [isCreatingRoom]);
+
+  const handleCreateRoom = useCallback(async () => {
+    if (!socketRef.current || isCreatingRoom) return;
+    const input = String(newRoomName || "").trim();
+    if (!input) {
+      pushToast({ type: "error", message: "Escribe un nombre para la sala" });
+      return;
+    }
+
+    setIsCreatingRoom(true);
+    try {
+      const response = await new Promise((resolve) => {
+        socketRef.current.emit(
+          "room:create",
+          { roomKey: input, title: input, description: "" },
+          resolve
+        );
+      });
+
+      if (!response?.ok || !response?.room?.roomKey) {
+        throw new Error(response?.error || "No se pudo crear la sala");
       }
-    );
-  };
+
+      setPublicRooms((prev) => mergeRooms(prev, [response.room]));
+      handleSelectRoom(response.room.roomKey);
+      setIsCreateRoomModalOpen(false);
+      setNewRoomName("");
+      pushToast({ type: "success", message: `Sala "${input}" creada` });
+    } catch (error) {
+      pushToast({ type: "error", message: error?.message || "No se pudo crear la sala" });
+    } finally {
+      setIsCreatingRoom(false);
+    }
+  }, [handleSelectRoom, isCreatingRoom, newRoomName, pushToast]);
+
+  useEffect(() => {
+    if (!isPostComposerOpen) return;
+
+    const raf = window.requestAnimationFrame(() => {
+      postComposerTextareaRef.current?.focus();
+    });
+
+    const onEscape = (event) => {
+      if (event.key === "Escape") {
+        closePostComposer();
+      }
+    };
+    window.addEventListener("keydown", onEscape);
+
+    return () => {
+      window.cancelAnimationFrame(raf);
+      window.removeEventListener("keydown", onEscape);
+    };
+  }, [closePostComposer, isPostComposerOpen]);
+
+  useEffect(() => {
+    if (!isCreateRoomModalOpen) return;
+
+    const raf = window.requestAnimationFrame(() => {
+      createRoomInputRef.current?.focus();
+    });
+
+    const onEscape = (event) => {
+      if (event.key === "Escape") {
+        closeCreateRoomModal();
+      }
+    };
+    window.addEventListener("keydown", onEscape);
+
+    return () => {
+      window.cancelAnimationFrame(raf);
+      window.removeEventListener("keydown", onEscape);
+    };
+  }, [closeCreateRoomModal, isCreateRoomModalOpen]);
 
   if (!isClient || authLoading) {
     return <AppShellSkeleton section={routeSection} />;
@@ -955,7 +1089,9 @@ export default function ChatExperience() {
             <div className="flex items-center gap-2">
               {isChatsView && (
                 <button
+                  type="button"
                   onClick={handleBack}
+                  aria-label="Volver a la lista de chats"
                   className={`md:hidden p-2 -ml-2 rounded-full transition-all active:scale-95 ${
                     showPrivateChat ? "text-gray-200 hover:bg-white/10" : "text-gray-200 hover:bg-white/10"
                   }`}
@@ -980,6 +1116,7 @@ export default function ChatExperience() {
               <div className="flex items-center gap-2" ref={postFilterPanelRef}>
                 <div className="relative">
                   <button
+                    type="button"
                     onClick={togglePostFilterPanel}
                     className="h-8 px-2.5 rounded-md border border-white/15 bg-white/5 hover:bg-white/10 active:scale-95 transition-all text-gray-100 inline-flex items-center gap-1.5"
                     title="Filtros de posts"
@@ -1000,6 +1137,7 @@ export default function ChatExperience() {
                         const checked = Boolean(postFilters[option.key]);
                         return (
                           <button
+                            type="button"
                             key={option.key}
                             onClick={() => togglePostFilter(option.key)}
                             className="w-full h-8 px-2 rounded-md hover:bg-white/10 active:scale-[0.99] transition-all text-left inline-flex items-center justify-between text-[12px] text-gray-100"
@@ -1016,6 +1154,7 @@ export default function ChatExperience() {
                         );
                       })}
                       <button
+                        type="button"
                         onClick={clearPostFilters}
                         className="w-full mt-1 h-7 rounded-md border border-white/15 text-[11px] text-gray-200 hover:bg-white/10 active:scale-[0.99] transition-all"
                       >
@@ -1025,7 +1164,9 @@ export default function ChatExperience() {
                   )}
                 </div>
                 <button
-                  onClick={handleCreateRoom}
+                  type="button"
+                  onClick={openCreateRoomModal}
+                  aria-label="Crear nueva sala"
                   className="h-8 w-8 rounded-md border border-white/15 bg-white/5 hover:bg-white/10 active:scale-95 transition-all text-gray-100 inline-flex items-center justify-center"
                   title="Nueva sala"
                 >
@@ -1064,6 +1205,9 @@ export default function ChatExperience() {
               profileForm={profileForm}
               profileError={profileError}
               profileSaving={profileSaving}
+              countriesLoading={countriesLoading}
+              countriesError={countriesError}
+              countryOptions={countryOptions}
               onProfileChange={handleProfileChange}
               onSubmitProfile={handleSubmitProfile}
               onLogout={handleLogout}
@@ -1097,8 +1241,10 @@ export default function ChatExperience() {
 
         {isPostsView && !isPostComposerOpen && (
           <button
+            type="button"
             onClick={handleOpenPostComposer}
-            className="absolute bottom-[calc(var(--bottom-nav-space)-0.65rem)] sm:bottom-[calc(var(--bottom-nav-space)-0.4rem)] right-4 sm:right-5 z-20 h-11 sm:h-12 px-4 rounded-full bg-[#00a884] hover:bg-[#008f72] active:scale-95 transition-all text-white shadow-xl inline-flex items-center gap-2"
+            aria-label="Crear nuevo post"
+            className="absolute bottom-[calc(var(--bottom-nav-space)-0.65rem)] sm:bottom-[calc(var(--bottom-nav-space)-0.4rem)] right-4 sm:right-5 z-50 h-11 sm:h-12 px-4 rounded-full bg-[#00a884] hover:bg-[#008f72] active:scale-95 transition-all text-white shadow-xl inline-flex items-center gap-2"
           >
             <Plus className="w-5 h-5" />
             <span className="text-sm font-medium">Nuevo post</span>
@@ -1109,8 +1255,12 @@ export default function ChatExperience() {
           <div
             className="absolute inset-0 z-30 bg-black/55 backdrop-blur-[2px] flex items-end sm:items-center justify-center p-3"
             onClick={closePostComposer}
+            role="dialog"
+            aria-modal="true"
+            aria-label="Editor de nuevo post"
           >
             <div
+              ref={postComposerDialogRef}
               className="w-full max-w-xl rounded-xl border border-white/15 bg-[#0f151a] shadow-2xl"
               onClick={(e) => e.stopPropagation()}
             >
@@ -1120,6 +1270,7 @@ export default function ChatExperience() {
                   <p className="text-[11px] text-gray-400">Feed: {selectedRoom?.title || selectedRoomKey}</p>
                 </div>
                 <button
+                  type="button"
                   onClick={closePostComposer}
                   className="h-8 px-2 rounded-md border border-white/15 text-gray-200 hover:bg-white/10 active:scale-95 transition-all text-xs"
                 >
@@ -1129,6 +1280,7 @@ export default function ChatExperience() {
 
               <div className="p-4 space-y-3">
                 <textarea
+                  ref={postComposerTextareaRef}
                   value={postDraft}
                   onChange={(e) => setPostDraft(e.target.value)}
                   onKeyDown={(e) => {
@@ -1180,6 +1332,7 @@ export default function ChatExperience() {
 
                     <div className="px-3 pb-3">
                       <button
+                        type="button"
                         onClick={removePostAttachment}
                         className="h-8 px-3 rounded-md border border-white/15 text-[11px] text-gray-200 hover:bg-white/10 active:scale-95 transition-all"
                       >
@@ -1192,6 +1345,7 @@ export default function ChatExperience() {
                 <div className="flex items-center justify-between gap-2">
                   <div className="flex items-center gap-2">
                     <button
+                      type="button"
                       onClick={() => postComposerFileInputRef.current?.click()}
                       className="h-8 px-2.5 rounded-md border border-white/15 bg-white/5 hover:bg-white/10 active:scale-95 transition-all text-gray-100 inline-flex items-center gap-1.5 text-xs"
                     >
@@ -1209,12 +1363,14 @@ export default function ChatExperience() {
 
                   <div className="flex items-center gap-2">
                     <button
+                      type="button"
                       onClick={closePostComposer}
                       className="h-8 px-3 rounded-md border border-white/15 text-gray-200 hover:bg-white/10 active:scale-95 transition-all text-xs"
                     >
                       Cancelar
                     </button>
                     <button
+                      type="button"
                       onClick={handlePublishPost}
                       disabled={postPublishing || (!postDraft.trim() && !postAttachment)}
                       className="h-8 px-3 rounded-md bg-[#00a884] hover:bg-[#008f72] active:scale-95 transition-all disabled:opacity-60 text-white text-xs font-medium"
@@ -1228,96 +1384,181 @@ export default function ChatExperience() {
           </div>
         )}
 
-        {showPrivateChat && (
+        {isChatsView && (
           <div className="bg-[#f0f2f5]/95 dark:bg-[#202c33]/95 backdrop-blur border-t border-black/5 dark:border-white/10 px-3 sm:px-4 py-2 flex items-end gap-2 z-10 select-none">
-            {showEmoji && (
-              <div className="absolute bottom-20 left-4 z-50 shadow-2xl">
-                <Picker onEmojiClick={(e) => setText((prev) => prev + e.emoji)} theme={darkMode ? "dark" : "light"} />
-              </div>
-            )}
-
-            {!audioFile && !isRecording && (
+            {showPrivateChat ? (
               <>
-                <div className="flex-1 bg-white dark:bg-[#2a3942] rounded-lg flex items-center px-2 py-1.5 shadow-sm">
-                  <button
-                    onClick={() => setShowEmoji(!showEmoji)}
-                    className="p-2 text-gray-500 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700 active:scale-95 transition-all rounded-full"
-                  >
-                    <Smile />
-                  </button>
-                  <input
-                    className="flex-1 bg-transparent px-2 py-1 outline-none dark:text-white max-h-[100px] overflow-y-auto"
-                    placeholder="Escribe un mensaje"
-                    value={text}
-                    onChange={(e) => setText(e.target.value)}
-                    onKeyDown={(e) => e.key === "Enter" && handleSendText()}
-                  />
-                  <button
-                    onClick={() => fileInputRef.current?.click()}
-                    className="p-2 text-gray-500 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700 active:scale-95 transition-all rounded-full rotate-45"
-                  >
-                    <Paperclip className="w-5 h-5" />
-                  </button>
-                  <input
-                    type="file"
-                    hidden
-                    ref={fileInputRef}
-                    onChange={handleFileSelect}
-                    accept="image/*,video/*,audio/*,application/*"
-                  />
-                </div>
-                <button
-                  onClick={text.trim() ? handleSendText : startRec}
-                  className="p-3 rounded-full text-white shadow-md transition-all active:scale-95 bg-[#008069] hover:bg-[#006c59]"
-                >
-                  {text.trim() ? <SendHorizontal className="w-5 h-5" /> : <Mic className="w-5 h-5" />}
-                </button>
-              </>
-            )}
-
-            {isRecording && (
-              <div className="flex-1 bg-white dark:bg-[#2a3942] rounded-lg flex items-center p-3 gap-3 animate-pulse shadow-sm">
-                <Mic className="text-red-500 animate-bounce w-5 h-5" />
-                <span className="flex-1 text-gray-500 dark:text-gray-300 font-mono">Grabando audio...</span>
-                <button
-                  onClick={cancelRec}
-                  className="text-red-500 text-sm font-medium hover:underline"
-                >
-                  Cancelar
-                </button>
-                <button onClick={stopRec} className="text-green-500">
-                  <StopCircle className="w-6 h-6" />
-                </button>
-              </div>
-            )}
-
-            {audioFile && (
-              <div className="flex-1 bg-white dark:bg-[#2a3942] rounded-lg flex items-center p-2 gap-3 shadow-sm">
-                <button
-                  onClick={clearAudio}
-                  className="p-2 text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 active:scale-95 transition-all rounded-full"
-                >
-                  <Trash2 className="w-5 h-5" />
-                </button>
-                <div className="flex-1 flex items-center gap-2">
-                  <span className="text-xs text-gray-500 dark:text-gray-400">Audio</span>
-                  <div className="flex-1 h-1 bg-green-500/30 rounded overflow-hidden">
-                    <div className="h-full bg-green-500 w-full" />
+                {showEmoji && (
+                  <div className="absolute bottom-20 left-4 z-50 shadow-2xl">
+                    <Picker onEmojiClick={(e) => setText((prev) => prev + e.emoji)} theme={darkMode ? "dark" : "light"} />
                   </div>
-                </div>
-                <button
-                  onClick={sendAudio}
-                  className="p-3 bg-[#008069] rounded-full text-white shadow-md hover:bg-[#006c59] active:scale-95 transition-all"
-                >
-                  <SendHorizontal className="w-5 h-5" />
-                </button>
+                )}
+
+                {!audioFile && !isRecording && (
+                  <>
+                    <div className="flex-1 bg-white dark:bg-[#2a3942] rounded-lg flex items-center px-2 py-1.5 shadow-sm">
+                      <button
+                        type="button"
+                        onClick={() => setShowEmoji(!showEmoji)}
+                        aria-label="Abrir selector de emojis"
+                        className="p-2 text-gray-500 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700 active:scale-95 transition-all rounded-full"
+                      >
+                        <Smile />
+                      </button>
+                      <input
+                        className="flex-1 bg-transparent px-2 py-1 outline-none dark:text-white max-h-[100px] overflow-y-auto"
+                        placeholder="Escribe un mensaje"
+                        value={text}
+                        onChange={(e) => setText(e.target.value)}
+                        onKeyDown={(e) => e.key === "Enter" && handleSendText()}
+                      />
+                      <button
+                        type="button"
+                        onClick={() => fileInputRef.current?.click()}
+                        aria-label="Adjuntar archivo"
+                        className="p-2 text-gray-500 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700 active:scale-95 transition-all rounded-full rotate-45"
+                      >
+                        <Paperclip className="w-5 h-5" />
+                      </button>
+                      <input
+                        type="file"
+                        hidden
+                        ref={fileInputRef}
+                        onChange={handleFileSelect}
+                        accept="image/*,video/*,audio/*,application/*"
+                      />
+                    </div>
+                    <button
+                      type="button"
+                      onClick={text.trim() ? handleSendText : startRec}
+                      aria-label={text.trim() ? "Enviar mensaje" : "Grabar audio"}
+                      className="p-3 rounded-full text-white shadow-md transition-all active:scale-95 bg-[#008069] hover:bg-[#006c59]"
+                    >
+                      {text.trim() ? <SendHorizontal className="w-5 h-5" /> : <Mic className="w-5 h-5" />}
+                    </button>
+                  </>
+                )}
+
+                {isRecording && (
+                  <div className="flex-1 bg-white dark:bg-[#2a3942] rounded-lg flex items-center p-3 gap-3 animate-pulse shadow-sm">
+                    <Mic className="text-red-500 animate-bounce w-5 h-5" />
+                    <span className="flex-1 text-gray-500 dark:text-gray-300 font-mono">Grabando audio...</span>
+                    <button
+                      type="button"
+                      onClick={cancelRec}
+                      className="text-red-500 text-sm font-medium hover:underline"
+                    >
+                      Cancelar
+                    </button>
+                    <button type="button" onClick={stopRec} aria-label="Detener grabacion" className="text-green-500">
+                      <StopCircle className="w-6 h-6" />
+                    </button>
+                  </div>
+                )}
+
+                {audioFile && (
+                  <div className="flex-1 bg-white dark:bg-[#2a3942] rounded-lg flex items-center p-2 gap-3 shadow-sm">
+                    <button
+                      type="button"
+                      onClick={clearAudio}
+                      aria-label="Descartar audio"
+                      className="p-2 text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 active:scale-95 transition-all rounded-full"
+                    >
+                      <Trash2 className="w-5 h-5" />
+                    </button>
+                    <div className="flex-1 flex items-center gap-2">
+                      <span className="text-xs text-gray-500 dark:text-gray-400">Audio</span>
+                      <div className="flex-1 h-1 bg-green-500/30 rounded overflow-hidden">
+                        <div className="h-full bg-green-500 w-full" />
+                      </div>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={sendAudio}
+                      aria-label="Enviar audio"
+                      className="p-3 bg-[#008069] rounded-full text-white shadow-md hover:bg-[#006c59] active:scale-95 transition-all"
+                    >
+                      <SendHorizontal className="w-5 h-5" />
+                    </button>
+                  </div>
+                )}
+              </>
+            ) : (
+              <div className="flex-1 bg-white dark:bg-[#2a3942] rounded-lg border border-black/5 dark:border-white/10 px-3 py-2.5 text-xs text-gray-500 dark:text-gray-300">
+                Selecciona una conversacion para escribir.
               </div>
             )}
+          </div>
+        )}
+
+        {isPostsView && isCreateRoomModalOpen && (
+          <div
+            className="absolute inset-0 z-40 bg-black/55 backdrop-blur-[2px] flex items-end sm:items-center justify-center p-3"
+            onClick={closeCreateRoomModal}
+            role="dialog"
+            aria-modal="true"
+            aria-label="Crear nueva sala"
+          >
+            <div
+              ref={createRoomDialogRef}
+              className="w-full max-w-md rounded-xl border border-white/15 bg-[#0f151a] shadow-2xl"
+              onClick={(event) => event.stopPropagation()}
+            >
+              <div className="px-4 py-3 border-b border-white/10 flex items-center justify-between">
+                <p className="text-sm font-semibold text-gray-100">Nueva sala publica</p>
+                <button
+                  type="button"
+                  onClick={closeCreateRoomModal}
+                  className="h-8 w-8 rounded-md border border-white/15 text-gray-200 hover:bg-white/10 active:scale-95 transition-all inline-flex items-center justify-center"
+                  aria-label="Cerrar modal de crear sala"
+                >
+                  <X className="w-4 h-4" />
+                </button>
+              </div>
+              <div className="p-4 space-y-3">
+                <label className="flex flex-col gap-1">
+                  <span className="text-xs text-gray-400">Nombre de la sala</span>
+                  <input
+                    ref={createRoomInputRef}
+                    value={newRoomName}
+                    onChange={(event) => setNewRoomName(event.target.value)}
+                    onKeyDown={(event) => {
+                      if (event.key === "Enter") {
+                        event.preventDefault();
+                        handleCreateRoom();
+                      }
+                    }}
+                    placeholder="Ejemplo: anuncios"
+                    className="h-10 px-3 rounded-md bg-[#11181e] border border-white/10 text-sm text-gray-100 placeholder:text-gray-500 outline-none focus:border-[#00a884]"
+                  />
+                </label>
+                <div className="flex items-center justify-end gap-2">
+                  <button
+                    type="button"
+                    onClick={closeCreateRoomModal}
+                    className="h-8 px-3 rounded-md border border-white/15 text-gray-200 hover:bg-white/10 active:scale-95 transition-all text-xs"
+                    disabled={isCreatingRoom}
+                  >
+                    Cancelar
+                  </button>
+                  <button
+                    type="button"
+                    onClick={handleCreateRoom}
+                    className="h-8 px-3 rounded-md bg-[#00a884] hover:bg-[#008f72] active:scale-95 transition-all disabled:opacity-60 text-white text-xs font-medium"
+                    disabled={isCreatingRoom || !String(newRoomName || "").trim()}
+                  >
+                    {isCreatingRoom ? "Creando..." : "Crear sala"}
+                  </button>
+                </div>
+              </div>
+            </div>
           </div>
         )}
       </div>
 
       <AppBottomNav activeSection={activeSection} onSectionChange={handleSectionChange} />
+
+      <ToastViewport toasts={toasts} onDismiss={dismissToast} />
 
       {mediaViewerData && (
         <MediaViewer

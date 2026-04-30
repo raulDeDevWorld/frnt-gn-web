@@ -78,6 +78,39 @@ function pathnameFromSection(section) {
   return "/posts";
 }
 
+function AppShellSkeleton() {
+  return (
+    <div className="min-h-screen bg-[color:var(--app-bg)]">
+      <div className="flex h-screen overflow-hidden">
+        <aside className="hidden md:flex md:w-[340px] border-r border-[color:var(--border-soft)] bg-[color:var(--surface-1)]">
+          <div className="w-full p-4 space-y-4">
+            <div className="h-10 w-full skeleton-line" />
+            {[0, 1, 2, 3, 4].map((id) => (
+              <div key={id} className="h-14 w-full skeleton-line" />
+            ))}
+          </div>
+        </aside>
+
+        <main className="flex-1 min-w-0 flex flex-col bg-[color:var(--surface-1)]">
+          <div className="h-[60px] border-b border-[color:var(--border-soft)] px-4 flex items-center">
+            <div className="h-8 w-40 skeleton-line" />
+          </div>
+          <div className="flex-1 p-3 sm:p-4 space-y-3 pb-[var(--bottom-nav-space)]">
+            {[0, 1, 2].map((id) => (
+              <div key={id} className="surface-card p-4 space-y-3">
+                <div className="h-3 w-28 skeleton-line" />
+                <div className="h-2.5 w-[90%] skeleton-line" />
+                <div className="h-2.5 w-[70%] skeleton-line" />
+                <div className="h-28 w-full rounded-xl skeleton-line" />
+              </div>
+            ))}
+          </div>
+        </main>
+      </div>
+    </div>
+  );
+}
+
 export default function ChatExperience() {
   const pathname = usePathname();
   const router = useRouter();
@@ -547,15 +580,7 @@ export default function ChatExperience() {
   };
 
   if (!isClient || authLoading) {
-    return (
-      <div className="min-h-screen bg-[color:var(--app-bg)] flex items-center justify-center p-6">
-        <div className="w-full max-w-md surface-card p-6 text-center">
-          <div className="w-10 h-10 mx-auto rounded-full border-2 border-[#2a3a46] border-t-[#00a884] animate-spin" />
-          <p className="mt-4 text-sm text-gray-200 font-medium">Cargando tu espacio...</p>
-          <p className="mt-1 text-xs text-[color:var(--text-soft)]">Sincronizando chats y publicaciones</p>
-        </div>
-      </div>
-    );
+    return <AppShellSkeleton />;
   }
 
   if (!authToken || !authUser) {

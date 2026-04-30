@@ -70,7 +70,7 @@ export function RoomPostCard({
   };
 
   return (
-    <article className="w-full rounded-2xl border border-white/10 bg-[#0f171d] px-3.5 py-3 shadow-[0_8px_24px_rgba(0,0,0,0.2)] transition-all duration-200 hover:-translate-y-[1px] hover:shadow-[0_12px_26px_rgba(0,0,0,0.24)] sm:px-4">
+    <article className="w-full surface-card px-3.5 py-3 shadow-[0_8px_24px_rgba(0,0,0,0.2)] transition-all duration-200 hover:-translate-y-[1px] hover:shadow-[0_12px_26px_rgba(0,0,0,0.24)] sm:px-4">
       <div className="flex items-start justify-between gap-3">
         <div className="flex items-center gap-2.5 min-w-0">
           <button
@@ -204,7 +204,7 @@ export function RoomPostCard({
       </div>
 
       {isCommentsOpen ? (
-        <div className="mt-2.5 rounded-xl border border-white/10 bg-[#0e171d] p-2.5 space-y-2">
+        <div className="mt-2.5 rounded-xl border border-[color:var(--border-soft)] bg-[#101b23] p-2.5 space-y-2">
           <div className="max-h-44 overflow-y-auto custom-scrollbar pr-1 space-y-2">
             {commentsLoading ? <p className="text-[11px] text-gray-400">Cargando comentarios...</p> : null}
             {!commentsLoading && commentsError ? <p className="text-[11px] text-red-300">{commentsError}</p> : null}
@@ -213,7 +213,7 @@ export function RoomPostCard({
             ) : null}
             {!commentsLoading &&
               comments.map((comment) => (
-                <div key={comment._id} className="rounded-lg border border-white/10 bg-white/[0.02] px-2 py-1.5">
+                <div key={comment._id} className="rounded-lg border border-[color:var(--border-soft)] bg-white/[0.02] px-2 py-1.5">
                   <div className="flex items-center justify-between gap-2">
                     <p className="text-[11px] text-gray-200 font-medium truncate">{comment.authorName || "Usuario"}</p>
                     <p className="text-[10px] text-gray-500 shrink-0">{formatCommentDate(comment.createdAt)}</p>

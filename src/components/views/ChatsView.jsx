@@ -4,8 +4,32 @@ import { MessageBubble } from "@/components/MessageBubble.jsx";
 
 function InlineHint({ text }) {
   return (
-    <div className="mx-auto mb-2 w-fit rounded-full border border-white/10 bg-black/25 px-3 py-1 text-[11px] text-gray-300">
+    <div className="mx-auto mb-2 w-fit rounded-full border border-[color:var(--border-soft)] bg-[#141e26] px-3 py-1 text-[11px] text-[color:var(--text-soft)]">
       {text}
+    </div>
+  );
+}
+
+function ChatSkeleton() {
+  return (
+    <div className="max-w-xl mx-auto space-y-2 pt-2">
+      {[0, 1, 2, 3].map((id) => (
+        <div key={id} className={`flex ${id % 2 === 0 ? "justify-start" : "justify-end"}`}>
+          <div className="max-w-[78%] surface-card px-3 py-2.5 space-y-2">
+            <div className="h-2.5 w-40 skeleton-line" />
+            <div className="h-2.5 w-28 skeleton-line" />
+          </div>
+        </div>
+      ))}
+    </div>
+  );
+}
+
+function EmptyBlock({ title, subtitle }) {
+  return (
+    <div className="mx-auto mt-8 max-w-md surface-card px-5 py-6 text-center">
+      <p className="text-[14px] text-gray-100 font-semibold">{title}</p>
+      <p className="mt-1 text-[12px] text-[color:var(--text-soft)]">{subtitle}</p>
     </div>
   );
 }
@@ -19,20 +43,16 @@ export function ChatsView({
   onMediaClick,
   bottomRef,
 }) {
+  const isInitialLoading = showPrivateChat && selectedPrivatePaging.loading && !selectedPrivatePaging.initialized;
+  const isEmptyChat =
+    showPrivateChat && selectedPrivatePaging.initialized && !selectedPrivatePaging.loading && !currentMessages.length;
+
   return (
     <>
-      {showPrivateChat && selectedPrivatePaging.loading && !selectedPrivatePaging.initialized ? (
-        <div className="text-center text-[12px] text-gray-500 dark:text-gray-300 py-6">Cargando mensajes...</div>
-      ) : null}
+      {isInitialLoading ? <ChatSkeleton /> : null}
 
-      {showPrivateChat &&
-      selectedPrivatePaging.initialized &&
-      !selectedPrivatePaging.loading &&
-      !currentMessages.length ? (
-        <div className="mx-auto mt-8 max-w-md rounded-2xl border border-white/10 bg-[#0f171d]/85 px-5 py-6 text-center">
-          <p className="text-[13px] text-gray-200 font-medium">Aun no hay mensajes en este chat.</p>
-          <p className="mt-1 text-[12px] text-gray-400">Escribe algo para iniciar la conversacion.</p>
-        </div>
+      {isEmptyChat ? (
+        <EmptyBlock title="Aun no hay mensajes en este chat." subtitle="Escribe algo para iniciar la conversacion." />
       ) : null}
 
       {showPrivateChat &&
@@ -61,10 +81,10 @@ export function ChatsView({
         : null}
 
       {isChatsView && !showPrivateChat ? (
-        <div className="mx-auto mt-8 max-w-md rounded-2xl border border-white/10 bg-[#0f171d]/85 px-5 py-6 text-center">
-          <p className="text-[13px] text-gray-200 font-medium">Selecciona una conversacion</p>
-          <p className="mt-1 text-[12px] text-gray-400">Abre la lista de chats y elige un contacto para empezar.</p>
-        </div>
+        <EmptyBlock
+          title="Selecciona una conversacion"
+          subtitle="Abre la lista de chats y elige un contacto para empezar."
+        />
       ) : null}
 
       {showPrivateChat ? <div ref={bottomRef} className="h-3" /> : null}

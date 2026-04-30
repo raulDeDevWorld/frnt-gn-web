@@ -1,0 +1,40 @@
+{
+  "name": "Swoou Chat",
+  "short_name": "Swoou",
+  "description": "Chat y publicaciones en tiempo real",
+  "start_url": "/posts",
+  "scope": "/",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#0b1116",
+  "theme_color": "#121b22",
+  "lang": "es",
+  "icons": [
+    {
+      "src": "/pwa/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/pwa/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ],
+  "shortcuts": [
+    {
+      "name": "Posts",
+      "short_name": "Posts",
+      "url": "/posts",
+      "icons": [{ "src": "/pwa/icon-192.png", "sizes": "192x192", "type": "image/png" }]
+    },
+    {
+      "name": "Chats",
+      "short_name": "Chats",
+      "url": "/chats",
+      "icons": [{ "src": "/pwa/icon-192.png", "sizes": "192x192", "type": "image/png" }]
+    }
+  ]
+}

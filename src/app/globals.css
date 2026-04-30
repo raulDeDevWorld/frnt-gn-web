@@ -3,6 +3,13 @@
 :root {
   --background: #ffffff;
   --foreground: #171717;
+  --app-bg: #0b1116;
+  --surface-1: #121b22;
+  --surface-2: #16222b;
+  --surface-3: #1a2a33;
+  --text-soft: #8ca0ad;
+  --border-soft: rgba(255, 255, 255, 0.09);
+  --bottom-nav-space: calc(4.5rem + env(safe-area-inset-bottom));
 }
 
 @theme inline {
@@ -24,6 +31,28 @@ body {
   color: var(--foreground);
   font-family: var(--font-geist-sans), "Segoe UI", sans-serif;
   text-rendering: optimizeLegibility;
+}
+
+.surface-card {
+  border: 1px solid var(--border-soft);
+  background: var(--surface-2);
+  border-radius: 1rem;
+}
+
+.skeleton-line {
+  background: linear-gradient(90deg, rgba(255, 255, 255, 0.08), rgba(255, 255, 255, 0.16), rgba(255, 255, 255, 0.08));
+  background-size: 240px 100%;
+  animation: skeleton-shimmer 1.4s ease-in-out infinite;
+  border-radius: 9999px;
+}
+
+@keyframes skeleton-shimmer {
+  0% {
+    background-position: -240px 0;
+  }
+  100% {
+    background-position: calc(240px + 100%) 0;
+  }
 }
 
 @media (prefers-reduced-motion: reduce) {

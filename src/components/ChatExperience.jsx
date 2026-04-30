@@ -548,22 +548,26 @@ export default function ChatExperience() {
 
   if (!isClient || authLoading) {
     return (
-      <div className="flex items-center justify-center h-screen bg-[#f0f2f5] dark:bg-[#111b21] text-gray-500">
-        Cargando...
+      <div className="min-h-screen bg-[color:var(--app-bg)] flex items-center justify-center p-6">
+        <div className="w-full max-w-md surface-card p-6 text-center">
+          <div className="w-10 h-10 mx-auto rounded-full border-2 border-[#2a3a46] border-t-[#00a884] animate-spin" />
+          <p className="mt-4 text-sm text-gray-200 font-medium">Cargando tu espacio...</p>
+          <p className="mt-1 text-xs text-[color:var(--text-soft)]">Sincronizando chats y publicaciones</p>
+        </div>
       </div>
     );
   }
 
   if (!authToken || !authUser) {
     return (
-      <div className="min-h-screen bg-[#f0f2f5] dark:bg-[#111b21] flex items-center justify-center p-6">
-        <div className="w-full max-w-md bg-white dark:bg-[#202c33] rounded-2xl border border-black/5 dark:border-white/10 shadow-lg p-8">
-          <h1 className="text-2xl font-semibold text-gray-900 dark:text-gray-100 mb-2">Iniciar sesion</h1>
-          <p className="text-sm text-gray-600 dark:text-gray-300 mb-6">
+      <div className="min-h-screen bg-[color:var(--app-bg)] flex items-center justify-center p-6">
+        <div className="w-full max-w-md surface-card p-8">
+          <h1 className="text-2xl font-semibold text-gray-100 mb-2">Iniciar sesion</h1>
+          <p className="text-sm text-[color:var(--text-soft)] mb-6">
             Usa tu cuenta de Google para entrar al chat.
           </p>
           <div ref={googleButtonRef} className="min-h-[44px]" />
-          {authError && <p className="mt-4 text-sm text-red-600 dark:text-red-400">{authError}</p>}
+          {authError ? <p className="mt-4 text-sm text-red-400">{authError}</p> : null}
         </div>
       </div>
     );
@@ -704,20 +708,20 @@ export default function ChatExperience() {
 
   return (
     <div
-      className={`flex h-screen overflow-hidden pb-[calc(5rem+env(safe-area-inset-bottom))] ${darkMode ? "dark bg-[#0b141a]" : "bg-gray-100"}`}
+      className={`flex h-screen overflow-hidden ${darkMode ? "dark bg-[color:var(--app-bg)]" : "bg-[color:var(--app-bg)]"}`}
     >
       {showSidebar && (
         <ChatSidebar
           darkMode={darkMode}
           activeSection={activeSection}
-        selectedUser={selectedUser}
-        selectedRoomKey={selectedRoomKey}
-        publicRooms={publicRooms}
-        roomMessages={roomMessages}
-        roomPosts={roomPosts}
-        activeUsers={activeUsers}
-        directChatThreads={directChatThreads}
-        privateChats={privateChats}
+          selectedUser={selectedUser}
+          selectedRoomKey={selectedRoomKey}
+          publicRooms={publicRooms}
+          roomMessages={roomMessages}
+          roomPosts={roomPosts}
+          activeUsers={activeUsers}
+          directChatThreads={directChatThreads}
+          privateChats={privateChats}
           onSelectUser={handleSelectUser}
           onSelectRoom={handleSelectRoom}
           setDarkMode={setDarkMode}
@@ -730,19 +734,15 @@ export default function ChatExperience() {
 
       <div
         className={`
-                min-w-0 flex-1 flex-col bg-[#efeae2] dark:bg-[#0b141a] relative
+                min-w-0 flex-1 flex-col bg-[color:var(--app-bg)] relative
                 ${isChatsView ? (mobileView === "chat" ? "flex" : "hidden md:flex") : "flex"}
             `}
       >
-        {showPrivateChat && (
-          <div className="absolute inset-0 opacity-40 pointer-events-none bg-[url('https://user-images.githubusercontent.com/15075759/28719144-86dc0f70-73b1-11e7-911d-60d70fcded21.png')] bg-repeat" />
-        )}
-
         <div
           className={`shadow-sm z-10 border-b ${
             showPrivateChat
-              ? "h-[60px] bg-[#f0f2f5] dark:bg-[#202c33] px-4 flex items-center justify-between dark:border-gray-700"
-              : "bg-[#121b22] border-white/10 px-3 sm:px-4 py-2.5"
+              ? "h-[60px] bg-[color:var(--surface-1)] px-4 flex items-center justify-between border-[color:var(--border-soft)]"
+              : "bg-[color:var(--surface-1)] border-[color:var(--border-soft)] px-3 sm:px-4 py-2.5"
           }`}
         >
           <div className="flex items-center justify-between gap-3">
@@ -751,7 +751,7 @@ export default function ChatExperience() {
                 <button
                   onClick={handleBack}
                   className={`md:hidden p-2 -ml-2 rounded-full transition-all active:scale-95 ${
-                    showPrivateChat ? "text-gray-600 dark:text-white hover:bg-black/5" : "text-gray-200 hover:bg-white/5"
+                    showPrivateChat ? "text-gray-200 hover:bg-white/10" : "text-gray-200 hover:bg-white/10"
                   }`}
                 >
                   <ArrowLeft />
@@ -761,10 +761,10 @@ export default function ChatExperience() {
                 {sectionHeaderBadge}
               </div>
               <div className="flex flex-col justify-center ml-1 cursor-pointer">
-                <p className={`font-medium leading-tight ${showPrivateChat ? "text-gray-900 dark:text-white" : "text-gray-100"}`}>
+                <p className="font-medium leading-tight text-gray-100">
                   {sectionHeaderTitle}
                 </p>
-                <p className={`text-xs leading-tight ${showPrivateChat ? "text-gray-500 dark:text-gray-400" : "text-gray-400"}`}>
+                <p className="text-xs leading-tight text-[color:var(--text-soft)]">
                   {sectionHeaderSubtitle}
                 </p>
               </div>
@@ -847,10 +847,10 @@ export default function ChatExperience() {
           onScroll={handleMessageScroll}
           className={`flex-1 overflow-y-auto custom-scrollbar relative z-0 ${
             showPrivateChat
-              ? "px-2 py-3 sm:px-8 md:px-12 pb-[calc(6.8rem+env(safe-area-inset-bottom))]"
+              ? "px-2 py-3 sm:px-8 md:px-12 pb-[var(--bottom-nav-space)]"
               : isPostsView
-                ? "p-3 sm:px-4 md:px-6 pb-[calc(6.6rem+env(safe-area-inset-bottom))] bg-[#11181e] dark:bg-[#0f151a]"
-                : "p-3 sm:px-4 md:px-6 pb-[calc(5.8rem+env(safe-area-inset-bottom))] bg-[#10171c] dark:bg-[#0f151a]"
+                ? "p-3 sm:px-4 md:px-6 pb-[calc(var(--bottom-nav-space)+0.2rem)] bg-[color:var(--surface-1)]"
+                : "p-3 sm:px-4 md:px-6 pb-[var(--bottom-nav-space)] bg-[color:var(--surface-1)]"
           }`}
         >
           {isConfigView ? (
@@ -892,7 +892,7 @@ export default function ChatExperience() {
         {isPostsView && !isPostComposerOpen && (
           <button
             onClick={handleOpenPostComposer}
-            className="absolute bottom-[calc(4.45rem+env(safe-area-inset-bottom))] sm:bottom-[calc(4.8rem+env(safe-area-inset-bottom))] right-4 sm:right-5 z-20 h-11 sm:h-12 px-4 rounded-full bg-[#00a884] hover:bg-[#008f72] active:scale-95 transition-all text-white shadow-xl inline-flex items-center gap-2"
+            className="absolute bottom-[calc(var(--bottom-nav-space)-0.65rem)] sm:bottom-[calc(var(--bottom-nav-space)-0.4rem)] right-4 sm:right-5 z-20 h-11 sm:h-12 px-4 rounded-full bg-[#00a884] hover:bg-[#008f72] active:scale-95 transition-all text-white shadow-xl inline-flex items-center gap-2"
           >
             <Plus className="w-5 h-5" />
             <span className="text-sm font-medium">Nuevo post</span>
